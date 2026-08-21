@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #242424;
+  /* Warm off-white. #f7f7f3 was near-pure and glared across the large
+     light sections; this keeps the "paper" feel without the harshness. */
+  --color-paper: #f2f0ea;
+  --color-spectre: #35aee4;
+  --color-ghost: #e5f4fc;
+  --color-night: #0b1014;
+
+  --font-display: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: "Pixelify Sans", ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+html {
+  scroll-behavior: auto;
+  background-color: var(--color-night);
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  overflow-x: clip;
+}
+
+::selection {
+  background-color: var(--color-spectre);
+  color: var(--color-night);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-ink) 78%, transparent);
+  border: 3px solid var(--color-paper);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-spectre);
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ */
+/* Textures                                                            */
+/* ------------------------------------------------------------------ */
+
+/* Fine pixel grid — faint square lattice */
+.bg-grid-paper {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-ink) 5%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.bg-grid-night {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-paper) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-paper) 4%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Keyframes                                                           */
+/* ------------------------------------------------------------------ */
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee var(--marquee-dur, 32s) linear infinite;
+}
+.marquee-paused:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.14);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+.animate-hero-zoom {
+  transform: scale(1.14);
+  animation: hero-zoom 9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+.animate-float {
+  animation: float-y 7s ease-in-out infinite;
+}
+
+@keyframes grain-shift {
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+  20% {
+    background-position: -4% 3%;
+  }
+  40% {
+    background-position: 3% -5%;
+  }
+  60% {
+    background-position: -3% -2%;
+  }
+  80% {
+    background-position: 4% 4%;
+  }
+}
+.animate-grain {
+  animation: grain-shift 1.4s steps(4) infinite;
+}
+
+@keyframes egg-beat {
+  0%,
+  28%,
+  56%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.045);
+  }
+  40% {
+    transform: scale(1.03);
+  }
+}
+.animate-egg {
+  animation: egg-beat 1.9s ease-in-out infinite;
+  transform-origin: 50% 88%;
+}
+
+@keyframes pixel-flicker {
+  0%,
+  84%,
+  100% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 0.15;
+  }
+  94% {
+    opacity: 0.55;
+  }
+}
+.animate-flicker {
+  animation: pixel-flicker 2.6s steps(2, end) infinite;
+}
+
+@keyframes cue-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.animate-cue {
+  animation: cue-drop 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes mark-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-mark-pop {
+  animation: mark-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(-14deg) scale(1.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-8deg) scale(1);
+  }
+}
+
+/* Page entrances are owned by GSAP. Their hidden start states are emitted
+   in SSR markup so a newly streamed route never flashes its finished state. */
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion                                                      */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+  .animate-marquee,
+  .animate-hero-zoom,
+  .animate-grain,
+  .animate-egg,
+  .animate-flicker,
+  .animate-float,
+  .animate-cue {
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* First-load intro                                                    */
+/* ------------------------------------------------------------------ */
+
+/* Set by an inline head script before first paint, so the cover is
+   already opaque when the browser paints frame one — the page never
+   flashes behind it. The canvas then takes over seamlessly, since the
+   intro's own first frame is solid black too. */
+html[data-intro="pending"] [data-pixel-transition] {
+  visibility: visible;
+  opacity: 1;
+  background-color: #000;
+}
+
+html[data-intro="pending"] body {
+  overflow: hidden;
+}

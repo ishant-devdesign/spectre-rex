@@ -159,23 +159,39 @@ caps at **5**.
 
 ### 2.7 Groups
 
-Admin Console -> **Groups** -> Create Group. Five of them:
+Admin Console -> **Groups** -> Create Group. Five of them. Groups, not aliases:
+an alias points at one mailbox, a group has a membership list you edit as people
+join and leave, and groups do not consume user seats.
 
-| Group | Members | Published on the site |
-|---|---|---|
-| `hello@spectrerex.com` | founders | yes |
-| `support@spectrerex.com` | HR | yes |
-| `press@spectrerex.com` | founders | yes |
-| `work@spectrerex.com` | founders | yes |
-| `team@spectrerex.com` | everyone | **no -- internal only** |
+| Group name | Email | Access type | Members |
+|---|---|---|---|
+| Hello | `hello@spectrerex.com` | Public | founders |
+| Support | `support@spectrerex.com` | Public | HR |
+| Press | `press@spectrerex.com` | Public | founders |
+| Business | `work@spectrerex.com` | Public | founders |
+| Team | `team@spectrerex.com` | **Organization** | everyone |
 
-Groups, not aliases. An alias points at one mailbox; a group has a membership
-list you edit as people join and leave. Groups do not consume user seats.
+Descriptions, for the Description field:
 
-Set each group's **Access Type**:
+- **Hello** -- General enquiries from the website. First point of contact for
+  anything that is not press, business or support. Reply-to address for
+  subscriber campaigns.
+- **Support** -- Inbound support requests. Feeds Zoho Desk, where HR triages and
+  assigns each ticket to an owner who then replies directly to the sender.
+- **Press** -- Media enquiries, interview requests and press-kit access.
+- **Business** -- Partnership, publishing and commercial enquiries. Work with
+  the studio.
+- **Team** -- Internal all-hands distribution list. Not published anywhere.
+  Organisation members only.
 
-- `hello`, `support`, `press`, `work` -> anyone can send to it (public)
-- `team` -> **organisation members only**, or outsiders can mail your whole team
+**Access type matters.** The four public groups must accept mail from outside
+the organisation or the website's published addresses silently reject strangers.
+`team@` must be set to **Organization** members only -- leaving it public lets
+anyone on the internet mail your entire staff at once.
+
+Also add `dmarc@spectrerex.com` as an **alias** on your own mailbox, not a group.
+It is one human reading machine-generated reports, and the DMARC record already
+published points `rua` at it.
 
 ### 2.8 Verify before moving on
 

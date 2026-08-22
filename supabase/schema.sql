@@ -111,12 +111,28 @@ create trigger projects_set_updated_at
 alter table public.signals  add column if not exists hero_image text;
 alter table public.projects add column if not exists hero_image text;
 
-update public.projects
-   set hero_image = image_path
- where hero_image is null
-   and image_path is not null;
-
-alter table public.projects drop column if exists image_path;
+-- The copy-then-drop has to be guarded and dynamic. A bare
+--   update public.projects set hero_image = image_path
+-- fails at PARSE time once the column is gone, so re-running the file after
+-- a successful migration would error with 42703 -- "if exists" on the drop
+-- does not help, because the statement above it never gets that far.
+-- EXECUTE defers parsing until the branch is actually taken.
+do $$
+begin
+  if exists (
+    select 1
+      from information_schema.columns
+     where table_schema = 'public'
+       and table_name   = 'projects'
+       and column_name  = 'image_path'
+  ) then
+    execute 'update public.projects
+                set hero_image = image_path
+              where hero_image is null
+                and image_path is not null';
+    execute 'alter table public.projects drop column image_path';
+  end if;
+end $$;
 
 -- =====================================================================
 -- contact_messages — REMOVED

@@ -234,10 +234,19 @@ export interface SaveInput {
  * It creates a DRAFT and never sends. Publishing to the site and mailing
  * the list are separate decisions, and only one of them is reversible.
  */
-async function draftCampaign(kind: EntryKind, id: string): Promise<void> {
+export type CampaignResult =
+  | { ok: true; id: string }
+  | { ok: false; error: string }
+  | null;
+
+async function draftCampaign(
+  kind: EntryKind,
+  id: string,
+): Promise<CampaignResult> {
   try {
     const entry = await getEntry(kind, id);
-    if (!entry || entry.classified) return;
+    if (!entry) return { ok: false, error: "Entry not found." };
+    if (entry.classified) return null;
 
     const [signals, projects] = await Promise.all([
       listPublished("signal"),
@@ -269,7 +278,7 @@ async function draftCampaign(kind: EntryKind, id: string): Promise<void> {
     });
     if (!created.ok) {
       console.warn("[campaign] draft not created:", created.error);
-      return;
+      return created;
     }
 
     const db = getDb();
@@ -284,11 +293,36 @@ async function draftCampaign(kind: EntryKind, id: string): Promise<void> {
         .set({ broadcastId: created.id })
         .where(eq(projectsTable.id, id));
     }
+    revalidatePath(`/admin/entries/${kind}/${id}`);
+    return created;
   } catch (error) {
     /* Never fail the save. The entry is published either way, and a
-       campaign that did not get drafted can be written by hand. */
+       campaign that did not get drafted can be written by hand -- but the
+       reason is returned rather than swallowed, because an invisible
+       failure here is indistinguishable from the feature not running. */
     console.warn("[campaign] draft failed:", error);
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
+}
+
+/**
+ * Manual trigger, for entries published before this existed and for
+ * retrying after a failure. Same guard on broadcast_id, so it cannot
+ * produce a duplicate.
+ */
+export async function createCampaign(
+  kind: EntryKind,
+  id: string,
+): Promise<CampaignResult> {
+  await assertAdmin();
+  const existing = await getEntry(kind, id);
+  if (existing?.broadcastId) {
+    return { ok: true, id: existing.broadcastId };
+  }
+  return draftCampaign(kind, id);
 }
 
 export async function saveEntry(input: SaveInput) {
@@ -358,9 +392,9 @@ export async function saveEntry(input: SaveInput) {
   revalidatePath(`/${input.kind}s`);
   revalidatePath(`/${input.kind}s/${slug}`);
 
-  if (goingLive) await draftCampaign(input.kind, input.id);
+  const campaign = goingLive ? await draftCampaign(input.kind, input.id) : null;
 
-  return { ok: true as const, slug };
+  return { ok: true as const, slug, campaign };
 }
 
 export async function deleteEntry(kind: EntryKind, id: string) {

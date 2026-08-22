@@ -20,6 +20,7 @@ import {
 import { saveEntry, type Entry } from "@/app/(admin)/admin/entries/actions";
 import { ImageField } from "./ImageField";
 import { slugify } from "@/lib/redact";
+import { createCampaign } from "@/app/(admin)/admin/entries/actions";
 
 const FIELD =
   "w-full border border-paper/20 bg-white/[0.03] px-3.5 py-2.5 font-body text-[14.5px] text-paper placeholder:text-paper/25 outline-none transition-colors duration-300 focus:border-spectre";
@@ -49,6 +50,9 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   const [blocks, setBlocks] = useState<Block[]>(entry.blocks);
   const [adding, setAdding] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  /* Campaign drafting used to log and vanish; a failure was indistinguish-
+     able from the feature not running at all. The outcome is surfaced. */
+  const [campaign, setCampaign] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const update = (id: string, patch: Partial<Block>) =>
@@ -71,7 +75,7 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   function persist(nextStatus: "draft" | "published") {
     setStatus(nextStatus);
     startTransition(async () => {
-      await saveEntry({
+      const result = await saveEntry({
         kind: entry.kind,
         id: entry.id,
         title,
@@ -84,11 +88,28 @@ export function EntryEditor({ entry }: { entry: Entry }) {
         status: nextStatus,
         blocks,
       });
-      setSaved(
-        nextStatus === "published" ? "Published" : "Draft saved",
-      );
+      setSaved(nextStatus === "published" ? "Published" : "Draft saved");
+      if (result?.campaign) {
+        setCampaign(
+          result.campaign.ok
+            ? "Campaign drafted in Resend."
+            : `Campaign not drafted: ${result.campaign.error}`,
+        );
+      }
       setTimeout(() => setSaved(null), 2600);
     });
+  }
+
+  async function draftCampaignNow() {
+    setCampaign("Working...");
+    const result = await createCampaign(entry.kind, entry.id);
+    setCampaign(
+      !result
+        ? "Skipped: classified entries are not campaigned."
+        : result.ok
+          ? "Campaign drafted in Resend."
+          : `Campaign not drafted: ${result.error}`,
+    );
   }
 
   return (
@@ -299,11 +320,44 @@ export function EntryEditor({ entry }: { entry: Entry }) {
             </a>
             <a
               href={`/admin/entries/${entry.kind}/${entry.id}/email`}
-              className="inline-flex items-center gap-2 border border-paper/25 px-3.5 py-2 font-pixel text-[9.5px] tracking-[0.24em] text-paper/60 uppercase transition-colors duration-300 hover:border-spectre hover:text-spectre"
+              className="inline-flex items-center justify-center gap-2 border border-paper/25 px-4 py-3 font-pixel text-[10px] tracking-[0.24em] text-paper/80 uppercase transition-colors duration-300 hover:border-spectre"
             >
               Campaign HTML
             </a>
+            {entry.broadcastId ? (
+              <a
+                href={`https://resend.com/broadcasts/${entry.broadcastId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 border border-spectre px-4 py-3 font-pixel text-[10px] tracking-[0.24em] text-spectre uppercase transition-colors duration-300 hover:bg-spectre hover:text-night"
+              >
+                Open campaign
+              </a>
+            ) : (
+              /* Manual trigger: covers entries published before drafting
+                 existed, and retries after a failed attempt. */
+              <button
+                type="button"
+                disabled={pending}
+                onClick={draftCampaignNow}
+                className="inline-flex items-center justify-center gap-2 border border-paper/25 px-4 py-3 font-pixel text-[10px] tracking-[0.24em] text-paper/80 uppercase transition-colors duration-300 hover:border-spectre disabled:opacity-50"
+              >
+                Draft campaign
+              </button>
+            )}
           </div>
+
+          {campaign ? (
+            <p
+              className={`mt-4 border px-3.5 py-2.5 text-[12.5px] leading-relaxed ${
+                campaign.startsWith("Campaign not drafted")
+                  ? "border-spectre/50 bg-spectre/10 text-paper/80"
+                  : "border-paper/15 text-paper/55"
+              }`}
+            >
+              {campaign}
+            </p>
+          ) : null}
 
           {saved ? (
             <p className="mt-5 font-pixel text-[9.5px] tracking-[0.24em] text-spectre uppercase">

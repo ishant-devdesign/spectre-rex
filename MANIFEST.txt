@@ -91,6 +91,7 @@ src/data/dragonPixels.ts
 src/db/index.ts
 src/db/schema.ts
 src/lib/blocks.ts
+src/lib/email/contactAck.ts
 src/lib/email/entryEmail.ts
 src/lib/entries.ts
 src/lib/hooks.ts

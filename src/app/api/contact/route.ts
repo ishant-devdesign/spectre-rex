@@ -1,4 +1,4 @@
-import { sendContactEmail } from "@/lib/resend";
+import { sendContactAck, sendContactEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +57,13 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
+
+  /* Acknowledge to the sender. Zoho's group auto-responder cannot do this:
+     the relay above is From no-reply@, so Zoho would reply to an address
+     with no inbox rather than to the person who filled in the form.
+     Best-effort -- the enquiry is already delivered. */
+  const ack = await sendContactAck(email);
+  if (!ack.ok) console.warn("[contact] acknowledgement:", ack.error);
 
   return Response.json({ ok: true });
 }

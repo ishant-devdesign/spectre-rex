@@ -11,6 +11,12 @@
  * recorded in Postgres even if the audience sync cannot run.
  */
 
+import {
+  contactAckHtml,
+  CONTACT_ACK_SUBJECT,
+  CONTACT_ACK_TEXT,
+} from "@/lib/email/contactAck";
+
 const API = "https://api.resend.com";
 
 export const resendConfigured = (): boolean =>
@@ -92,6 +98,36 @@ const escapeHtml = (value: string): string =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+
+/**
+ * Acknowledges a contact form submission to the person who sent it.
+ *
+ * Sent after the studio copy, and its failure is not fatal: the enquiry has
+ * already reached the team, and turning a delivered message into a visible
+ * error because a courtesy receipt bounced would be the wrong trade.
+ *
+ * Reply-To points at the studio group so a reply to the acknowledgement
+ * reaches a human rather than the unattended sending address.
+ */
+export async function sendContactAck(to: string): Promise<SendResult> {
+  if (!resendConfigured()) {
+    return { ok: false, error: "Email delivery is not configured." };
+  }
+  const { ok, json } = await call("/emails", {
+    from: FROM,
+    to: [to],
+    reply_to: CONTACT_TO,
+    subject: CONTACT_ACK_SUBJECT,
+    html: contactAckHtml(),
+    text: CONTACT_ACK_TEXT,
+    /* Marks this as machine-generated so a recipient's own out-of-office
+       does not answer it and start a loop. */
+    headers: { "Auto-Submitted": "auto-replied" },
+  });
+  return ok
+    ? { ok: true }
+    : { ok: false, error: errorFrom(json, "Resend rejected the message.") };
+}
 
 export interface ContactPayload {
   channel: string;

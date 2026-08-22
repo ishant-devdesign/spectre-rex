@@ -329,15 +329,39 @@ export async function createBroadcastDraft(input: {
   const key = manageKey();
   if (!key) return { ok: false, error: "Resend is not configured." };
 
-  const audience = await resolveAudienceId();
-  if (!audience.ok) return { ok: false, error: audience.error };
+  /**
+   * Target for the draft.
+   *
+   * A broadcast must carry `segment_id` or `audience_id`. Passing the
+   * audience scopes the draft to it, which Resend's composer shows as the
+   * segment named after that audience -- "General" by default, not "All
+   * contacts". There is no documented value meaning "everyone", so a
+   * segment is used when one is configured and the audience otherwise.
+   *
+   * Either way the draft's recipient can be changed in the composer before
+   * sending, which is one of the reasons this creates a draft rather than
+   * sending.
+   */
+  const segmentId = process.env.RESEND_SEGMENT_ID?.trim();
+  let target: Record<string, string>;
+  if (segmentId) {
+    target = { segment_id: segmentId };
+  } else {
+    const audience = await resolveAudienceId();
+    if (!audience.ok) return { ok: false, error: audience.error };
+    target = { audience_id: audience.id };
+  }
 
+  /* No reply_to. Campaigns are one-way by decision: replies land on the
+     unattended sending address and go nowhere, which is what "no-reply"
+     means. The consequence is that the unsubscribe link is the reader's
+     only exit, so it stays prominent in the footer rather than being
+     shrunk to a legal formality. */
   const { ok, json } = await call(
     "/broadcasts",
     {
-      audience_id: audience.id,
+      ...target,
       from: FROM,
-      reply_to: CONTACT_TO,
       name: input.name,
       subject: input.subject,
       html: input.html,

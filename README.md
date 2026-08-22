@@ -55,6 +55,7 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `RESEND_API_KEY` | for outbound mail | Contact form relay and audience sync |
 | `RESEND_FROM` | no | Defaults to `Spectre Rex <no-reply@send.spectrerex.com>` |
 | `CONTACT_TO` | no | Defaults to `hello@spectrerex.com` |
+| `RESEND_SEGMENT_ID` | no | Target segment for drafts; falls back to the audience |
 | `RESEND_AUDIENCE_ID` | when >1 audience | Required once the account has more than one; discovered otherwise |
 | `RESEND_ADMIN_API_KEY` | for campaigns | Full-access key: listing broadcasts, creating contacts and drafting campaigns all need it. A sending key cannot do any of them. |
 
@@ -281,6 +282,14 @@ The id resolves in three steps:
 | Exactly one audience | use it, no configuration |
 | Several audiences | **refuse**, and name them with their ids |
 
+A broadcast must carry `segment_id` or `audience_id`. Passing the audience
+scopes the draft to it, which the composer displays as the segment named
+after that audience -- "General" by default, rather than "All contacts".
+There is no documented value meaning everyone, so: set `RESEND_SEGMENT_ID`
+to a segment covering the whole list and drafts target it, or change the
+recipient in the composer before sending. Being a draft is what makes the
+second option cheap.
+
 The third row is the important one. Taking the first would work today and
 break silently the day a second list is added -- audience order is not
 guaranteed, and a devlog sent to the wrong list cannot be recalled. The
@@ -289,6 +298,15 @@ env var.
 
 Note the asymmetry, which is easy to get wrong: `POST /contacts` takes no
 audience at all, `POST /broadcasts` requires one.
+
+Campaigns carry **no Reply-To**. They are one-way by decision: replies reach
+the unattended sending address and go nowhere. The consequence is that the
+unsubscribe link is the reader's only exit, so it stays prominent in the
+footer rather than shrinking to a legal formality.
+
+The contact form is the opposite and deliberately so -- the message relayed
+to the studio carries the visitor in Reply-To, which is how the team answers
+them.
 
 **Publishing an entry drafts its campaign automatically.** The first time an
 entry moves from draft to published, `saveEntry` renders the teaser and

@@ -180,8 +180,11 @@ export function renderEntryEmail(
   <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff">
 
     <tr><td style="background:${NIGHT};padding:28px 32px">
-      <div style="font-family:${MONO};font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:${SPECTRE}">Spectre Rex</div>
-      <div style="font-family:${MONO};font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(242,240,234,0.45);padding-top:14px">${label} ${esc(entry.code)}${entry.dateLabel ? ` &middot; ${esc(entry.dateLabel)}` : ""}</div>
+      <!-- Hosted PNG, not the site's inline SVG: Gmail, Outlook and Yahoo
+           all strip or fail to render SVG in email. -->
+      <img src="${siteUrl}/assets/email/logo-paper.png" alt="Spectre Rex" width="180" height="45"
+           style="display:block;width:180px;height:auto;border:0;outline:none;text-decoration:none" />
+      <div style="font-family:${MONO};font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(242,240,234,0.45);padding-top:20px">${label} ${esc(entry.code)}${entry.dateLabel ? ` &middot; ${esc(entry.dateLabel)}` : ""}</div>
       <h1 style="margin:12px 0 0;font-family:${SANS};font-size:32px;line-height:1.08;font-weight:800;letter-spacing:-0.03em;color:${PAPER}">${esc(entry.title)}</h1>
       ${entry.subtitle ? `<p style="margin:14px 0 0;font-family:${SANS};font-size:17px;line-height:1.4;font-weight:600;color:rgba(242,240,234,0.62)">${esc(entry.subtitle)}</p>` : ""}
     </td></tr>

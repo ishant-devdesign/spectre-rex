@@ -5,6 +5,9 @@ README.md
 dns/README.txt
 dns/godaddy-zoho-mail.txt
 drizzle.config.ts
+email/README.txt
+email/autoreply.html
+email/autoreply.txt
 eslint.config.mjs
 next.config.ts
 package-lock.json
@@ -12,6 +15,9 @@ package.json
 postcss.config.mjs
 public/assets/Dragon.svg
 public/assets/Logo.svg
+public/assets/email/dragon.png
+public/assets/email/logo-ink.png
+public/assets/email/logo-paper.png
 public/assets/img/concept-1.jpg
 public/assets/img/concept-2.jpg
 public/assets/img/concept-3.jpg

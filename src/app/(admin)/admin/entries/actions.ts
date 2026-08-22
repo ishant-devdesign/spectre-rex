@@ -74,7 +74,11 @@ export async function listEntries(): Promise<{
         kind: "project" as const,
         code: row.code,
         slug: row.slug ?? "",
-        title: row.codename ?? "Untitled project",
+        /* Seeded concepts ship with a null codename on purpose -- the public
+           site redacts them. Falling back to a literal here would make all
+           six rows read "Untitled project"; the list renders `title || slug`
+           instead so the field stays honestly empty for the editor. */
+        title: row.codename ?? "",
         subtitle: row.subtitle ?? "",
         summary: row.summary ?? "",
         blocks: parseBlocks(row.blocks),

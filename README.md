@@ -80,8 +80,14 @@ is checked by `tsc`, whereas generated PostgREST types drift silently.
 
 Of the three database variables, only `DATABASE_URL` is required.
 `DIRECT_DATABASE_URL` is for `drizzle-kit` migrations, which are unnecessary if
-`schema.sql` is run by hand in the SQL Editor. `DATABASE_POOL_MAX` defaults to
-`3` in code.
+`schema.sql` is run by hand in the SQL Editor -- and newer Supabase projects have
+no IPv4 direct host to point it at. `DATABASE_POOL_MAX` defaults to `3` in code.
+
+**Copy `DATABASE_URL` from Supabase -> Connect -> Transaction pooler.** The region
+and the `aws-0` / `aws-1` prefix are project-specific. A wrong host fails with
+`tenant/user postgres.<ref> not found` -- the pooler rejecting the handshake, not
+DNS, since every pooler hostname resolves regardless of which projects live on
+it. Percent-encode `@` as `%40` and `#` as `%23` in the password.
 
 Use the **pooler** string on Vercel. Every serverless invocation opens its own pool and the direct
 5432 connection runs out of Postgres slots quickly. Migrations are the exception -- `drizzle-kit`
@@ -302,13 +308,24 @@ provide it (no SMTP); point it at Resend instead, reusing the account from 2.3.
 
 ## Admin panel
 
-`/admin` -- inbox for contact form submissions, with counts, an open/handled filter and one-click
-reply.
-`/admin/entries` -- content editor for signals and projects.
-`/admin/login` -- magic-link sign-in.
+| Route | Purpose |
+|---|---|
+| `/admin/projects` | List, create, edit and delete projects |
+| `/admin/signals` | List, create, edit and delete signals |
+| `/admin/entries/<kind>/<id>` | Block editor for one entry |
+| `/admin/entries/<kind>/<id>/preview` | Renders through the public component |
+| `/admin/login` | Magic-link sign-in |
 
-Both live in the `(admin)` route group, so they inherit none of the site chrome: no nav, footer,
-smooth scroll, page transition or first-load intro.
+`/admin` and `/admin/entries` both redirect to `/admin/projects`; they are kept as routes because
+middleware, the login form's `next` parameter and existing bookmarks point at them.
+
+All of it lives in the `(admin)` route group, so it inherits none of the site chrome: no nav,
+footer, smooth scroll, page transition or first-load intro.
+
+**There is no inbox.** Contact form submissions are still written to `contact_messages` by
+`/api/contact`, but nothing in the panel reads them -- view them in the Supabase table editor, or
+wire the form to email later. Deleting the UI rather than hiding it keeps `ADMIN_EMAILS`-gated
+surface area to the two things that are actually used.
 
 ### Access control
 
@@ -340,6 +357,14 @@ renderer and actions are all type-checked against it.
 
 Image and image-group blocks accept a drag-and-drop upload as well as a typed path; see
 [Media and uploads](#media-and-uploads).
+
+Deleting is two-step in the list -- the trash icon arms a Cancel/Confirm pair rather than firing on
+one click, because it sits next to Edit in a dense row. A native `confirm()` is not used: it is
+blocked in some embedded browsers and cannot be styled.
+
+Seeded projects have a null `codename` on purpose, since the public site redacts them. The list
+shows `slug (unnamed)` in italics for those rather than a shared placeholder, so six classified
+concepts remain distinguishable.
 
 ---
 

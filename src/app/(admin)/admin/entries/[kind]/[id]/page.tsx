@@ -19,7 +19,7 @@ export default async function EntryPage({
 
   return (
     <main className="mx-auto max-w-[1240px] px-5 py-10 md:px-10 md:py-14">
-      <AdminHeader current="entries" />
+      <AdminHeader current={entry.kind === "project" ? "projects" : "signals"} />
 
       <div className="mt-10 mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-pixel text-[10px] tracking-[0.3em] text-paper/45 uppercase">

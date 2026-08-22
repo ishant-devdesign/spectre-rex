@@ -2,12 +2,14 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { LogoMark } from "@/components/svg/LogoMark";
 
-const TABS = [
-  { href: "/admin", label: "Inbox", key: "inbox" },
-  { href: "/admin/entries", label: "Content", key: "entries" },
+export type AdminTab = "projects" | "signals";
+
+const TABS: { href: string; label: string; key: AdminTab }[] = [
+  { href: "/admin/projects", label: "Projects", key: "projects" },
+  { href: "/admin/signals", label: "Signals", key: "signals" },
 ];
 
-export function AdminHeader({ current }: { current: "inbox" | "entries" }) {
+export function AdminHeader({ current }: { current: AdminTab }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-6 border-b border-paper/12 pb-8">
       <div className="flex items-center gap-6">
@@ -17,6 +19,7 @@ export function AdminHeader({ current }: { current: "inbox" | "entries" }) {
             <Link
               key={tab.key}
               href={tab.href}
+              aria-current={current === tab.key ? "page" : undefined}
               className={`px-3 py-2 font-pixel text-[10px] tracking-[0.24em] uppercase transition-colors duration-300 ${
                 current === tab.key
                   ? "text-spectre"

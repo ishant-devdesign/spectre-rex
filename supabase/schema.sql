@@ -135,6 +135,20 @@ begin
 end $$;
 
 -- =====================================================================
+-- redaction columns — REMOVED
+--
+-- signals.redaction_blocks, signals.date_redacted and
+-- projects.redaction_blocks stored how many blocks to draw over a title.
+-- Redaction is computed now: src/lib/entries.ts scrambles the real text on
+-- read, so the length is derived from the content rather than typed by hand
+-- and kept in sync. A stored count could disagree with the string it was
+-- meant to cover, and did.
+-- =====================================================================
+alter table public.signals  drop column if exists redaction_blocks;
+alter table public.signals  drop column if exists date_redacted;
+alter table public.projects drop column if exists redaction_blocks;
+
+-- =====================================================================
 -- contact_messages — REMOVED
 --
 -- The contact form used to write here and an admin inbox read it back. Both

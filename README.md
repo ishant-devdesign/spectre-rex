@@ -155,6 +155,19 @@ Classified rows are not wrapped in links anywhere. Offering a click that
 dead-ends in a 404 is worse than offering none, and the prev/next footer
 skips them for the same reason.
 
+**The seed holds real content, not pre-redacted content.** It used to store
+`'Classified.'` as the summary and a separate `redaction_blocks` count saying
+how many squares to draw. That is gone: `redaction_blocks` and
+`date_redacted` are dropped, classified rows carry their true codename and
+summary, and the scrambler derives the mask from the text. A stored count
+could disagree with the string it was covering, and the author saw a
+placeholder in the panel instead of what they had written.
+
+The seed is keyed on `code` for both kinds. Slug and code are both unique,
+but the slug is derived from the title, so re-seeding after a title change
+would try to insert a new slug and collide on code -- which
+`on conflict (slug)` cannot catch.
+
 `EntryArticle` is rendered by the public detail page **and** by the admin
 preview, through the same `toPublicEntry()` boundary. Preview used to be a
 separate 760px article, so authors were shown something no reader would ever

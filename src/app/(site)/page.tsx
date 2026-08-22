@@ -1,18 +1,17 @@
 import Image from "next/image";
 import {
-  CONCEPTS,
   DISCIPLINES,
   IDENTITY,
-  SIGNALS,
   TICKER_ITEMS,
 } from "@/data/content";
+import { listPublished } from "@/lib/entries";
 import { Clip, Parallax, Reveal, Words } from "@/components/motion/bits";
 import { Marquee } from "@/components/ui/Marquee";
 import { Button } from "@/components/ui/Button";
 import { PixelTag, SectionHead } from "@/components/ui/chrome";
 import { TransitionLink } from "@/components/transition/TransitionLink";
 import { GameCard, type GameCardData } from "@/components/cards/GameCard";
-import { SignalRow } from "@/components/sections/SignalRow";
+import { EntryRow } from "@/components/sections/EntryRow";
 import { ConceptCard } from "@/components/sections/ConceptCard";
 import { DragonMark } from "@/components/svg/DragonMark";
 import { ArrowRight } from "lucide-react";
@@ -31,7 +30,19 @@ const DISCIPLINE_CARDS: GameCardData[] = DISCIPLINES.map((d) => ({
   seed: d.seed,
 }));
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  /* Same source as /projects and /signals. The home page used to render a
+     hardcoded copy, so an entry edited in the panel changed on the archive
+     pages and not here. */
+  const [concepts, signals] = await Promise.all([
+    listPublished("project"),
+    listPublished("signal"),
+  ]);
+  const featuredConcepts = concepts.slice(0, 3);
+  const featuredSignals = signals.slice(0, 3);
+
   return (
     <>
       {/* ============================ HERO ============================ */}
@@ -199,14 +210,30 @@ export default function HomePage() {
             </p>
           </Reveal>
           <div className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-            {CONCEPTS.map((c, i) => (
-              <Reveal key={c.index} delay={i * 0.1}>
-                <ConceptCard
-                  index={c.index}
-                  image={c.image}
-                  blocks={c.blocks}
-                  dark
-                />
+            {featuredConcepts.map((entry, i) => (
+              <Reveal key={entry.id} delay={i * 0.1}>
+                {entry.classified ? (
+                  /* No link: a classified slug 404s by design. */
+                  <ConceptCard
+                    index={entry.code}
+                    image="/assets/img/concept-1.jpg"
+                    blocks={Math.max(6, entry.title.length)}
+                    dark
+                  />
+                ) : (
+                  <TransitionLink
+                    href={`/projects/${entry.slug}`}
+                    aria-label={entry.title || `Project ${entry.code}`}
+                    className="group block"
+                  >
+                    <ConceptCard
+                      index={entry.code}
+                      image={entry.heroImage ?? "/assets/img/concept-1.jpg"}
+                      blocks={0}
+                      dark
+                    />
+                  </TransitionLink>
+                )}
               </Reveal>
             ))}
           </div>
@@ -292,9 +319,9 @@ export default function HomePage() {
           />
         </div>
         <div className="border-b border-ink/10 pb-0">
-          {SIGNALS.map((signal) => (
-            <Reveal key={signal.id} y={24}>
-              <SignalRow signal={signal} />
+          {featuredSignals.map((entry) => (
+            <Reveal key={entry.id} y={24}>
+              <EntryRow entry={entry} showSummary={false} />
             </Reveal>
           ))}
         </div>

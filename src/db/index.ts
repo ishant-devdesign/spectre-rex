@@ -24,7 +24,7 @@ function createPool(): Pool {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error(
-      "DATABASE_URL is not set. Copy .env.example to .env.local and add your Supabase connection string.",
+      "DATABASE_URL is not set. Add your Supabase connection string to .env.local (see README).",
     );
   }
 

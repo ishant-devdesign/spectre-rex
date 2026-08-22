@@ -17,6 +17,7 @@ import {
   type BlockType,
 } from "@/lib/blocks";
 import { saveEntry, type Entry } from "@/app/(admin)/admin/entries/actions";
+import { ImageField } from "./ImageField";
 
 const FIELD =
   "w-full border border-paper/20 bg-white/[0.03] px-3.5 py-2.5 font-body text-[14.5px] text-paper placeholder:text-paper/25 outline-none transition-colors duration-300 focus:border-spectre";
@@ -542,11 +543,9 @@ function BlockFields({
     case "image":
       return (
         <div className="grid gap-3">
-          <input
+          <ImageField
             value={block.src}
-            onChange={(event) => update(block.id, { src: event.target.value })}
-            placeholder="/assets/img/example.jpg"
-            className={FIELD}
+            onChange={(src) => update(block.id, { src })}
           />
           <div className="grid gap-3 md:grid-cols-2">
             <input
@@ -571,39 +570,42 @@ function BlockFields({
       return (
         <div className="grid gap-3">
           {block.images.map((image, index) => (
-            <div key={index} className="flex gap-2">
-              <input
+            <div
+              key={index}
+              className="grid gap-2 border border-paper/10 p-3"
+            >
+              <ImageField
                 value={image.src}
-                onChange={(event) => {
+                onChange={(src) => {
                   const images = block.images.map((item, i) =>
-                    i === index ? { ...item, src: event.target.value } : item,
+                    i === index ? { ...item, src } : item,
                   );
                   update(block.id, { images });
                 }}
-                placeholder="/assets/img/example.jpg"
-                className={FIELD}
               />
-              <input
-                value={image.alt}
-                onChange={(event) => {
-                  const images = block.images.map((item, i) =>
-                    i === index ? { ...item, alt: event.target.value } : item,
-                  );
-                  update(block.id, { images });
-                }}
-                placeholder="Alt"
-                className={`${FIELD} max-w-[150px]`}
-              />
-              <IconButton
-                label="Remove image"
-                onClick={() =>
-                  update(block.id, {
-                    images: block.images.filter((_, i) => i !== index),
-                  })
-                }
-              >
-                <X className="h-3.5 w-3.5" />
-              </IconButton>
+              <div className="flex gap-2">
+                <input
+                  value={image.alt}
+                  onChange={(event) => {
+                    const images = block.images.map((item, i) =>
+                      i === index ? { ...item, alt: event.target.value } : item,
+                    );
+                    update(block.id, { images });
+                  }}
+                  placeholder="Alt text"
+                  className={FIELD}
+                />
+                <IconButton
+                  label="Remove image"
+                  onClick={() =>
+                    update(block.id, {
+                      images: block.images.filter((_, i) => i !== index),
+                    })
+                  }
+                >
+                  <X className="h-3.5 w-3.5" />
+                </IconButton>
+              </div>
             </div>
           ))}
           <AddRow

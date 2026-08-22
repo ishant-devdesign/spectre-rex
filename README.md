@@ -25,7 +25,7 @@ Supabase (Postgres + Auth), deployed on Vercel
 
 ```bash
 npm install
-cp .env.example .env.local     # fill in the values below
+# create .env.local with the variables in the table below
 npm run dev                    # http://localhost:3000
 ```
 
@@ -41,6 +41,9 @@ npm run dev                    # http://localhost:3000
 
 ## Environment variables
 
+There is no `.env.example` in the repo -- this table is the reference. Create
+`.env.local` locally (it is gitignored) and set the same names on Vercel.
+
 | Name | Required | Notes |
 |---|---|---|
 | `DATABASE_URL` | yes | Supabase **transaction pooler**, port `6543` |
@@ -49,6 +52,15 @@ npm run dev                    # http://localhost:3000
 | `NEXT_PUBLIC_SUPABASE_URL` | for `/admin` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | for `/admin` | Supabase anon (publishable) key |
 | `ADMIN_EMAILS` | for `/admin` | Comma-separated allowlist |
+
+`NEXT_PUBLIC_SUPABASE_URL` is also read at **build** time, by `next.config.ts`, to allowlist the
+Storage host for `next/image`. Set it in Vercel before the first deploy or uploaded images fail to
+render.
+
+There is deliberately **no** `SUPABASE_SERVICE_ROLE_KEY`. Nothing in the codebase reads one: server
+code writes through `DATABASE_URL` and uploads go straight from the browser to Storage as the
+signed-in user. A service-role key bypasses every row level security policy, so it is not worth
+carrying for no gain.
 
 Use the **pooler** string on Vercel. Every serverless invocation opens its own pool and the direct
 5432 connection runs out of Postgres slots quickly. Migrations are the exception -- `drizzle-kit`
@@ -67,7 +79,8 @@ Nothing touches the database at build time: `src/db/index.ts` creates its pool l
 2. Open **SQL Editor** and run, in order:
    - `supabase/schema.sql` -- tables, indexes, triggers, row level security
    - `supabase/seed.sql` -- the studio's current content
-3. Both files are idempotent. Re-running `seed.sql` resets content to the shipped baseline.
+   - `supabase/storage.sql` -- the `media` bucket for image uploads
+3. All three files are idempotent. Re-running `seed.sql` resets content to the shipped baseline.
 
 | Table | Holds | Public read |
 |---|---|---|
@@ -79,6 +92,36 @@ Nothing touches the database at build time: `src/db/index.ts` creates its pool l
 RLS is enabled on all four. The app's server code connects with the Postgres role from
 `DATABASE_URL`, which owns the tables and so bypasses RLS -- that is what lets the admin panel read
 everything while the anon key sees only published rows.
+
+### Media and uploads
+
+`supabase/storage.sql` creates one public bucket, `media`, limited to 10 MB image
+files. The admin editor's image blocks upload into it: pick or drag a file and the
+block's `src` is filled in with the resulting public URL.
+
+Two kinds of value are valid in an image block, and both keep working:
+
+| Value | Where it lives |
+|---|---|
+| `/assets/img/hero.jpg` | committed to `public/` in this repo |
+| `https://<ref>.supabase.co/storage/...` | uploaded through `/admin` |
+
+Uploads go from the browser **straight to Supabase**, never through the Next
+server. That is deliberate: Vercel caps serverless request bodies at 4.5 MB, so
+proxying a 10 MB image through an API route would fail at exactly the sizes
+photographs arrive at.
+
+Writes require an authenticated Supabase session; reads are open. Since there is
+no public signup (`shouldCreateUser: false`, users created by hand), the only
+accounts that can write are the studio's own. A leaked anon key cannot upload.
+
+**Video needs no bucket.** Video blocks take a YouTube or Vimeo URL and render an
+iframe, so the studio never pays to serve it. Hosting video on the free tier's
+1 GB storage and 5 GB monthly egress would not survive one trailer.
+
+`next.config.ts` must allow the Supabase hostname or `next/image` throws
+`hostname is not configured`. It reads `NEXT_PUBLIC_SUPABASE_URL`, which therefore
+has to be set at **build** time on Vercel, not just at runtime.
 
 ### Connection strings
 
@@ -201,6 +244,9 @@ Each entry is a draft or published, and has a preview route that renders through
 the public site uses. The model lives in `src/lib/blocks.ts` -- add a variant there and the editor,
 renderer and actions are all type-checked against it.
 
+Image and image-group blocks accept a drag-and-drop upload as well as a typed path; see
+[Media and uploads](#media-and-uploads).
+
 ---
 
 ## Project structure
@@ -218,10 +264,11 @@ src/
     transition/      pixel transition + first-load intro
     ...
   db/                Drizzle schema and lazy pool
-  lib/               block model, Supabase clients, hooks
+  lib/               block model, media helpers, Supabase clients, hooks
 supabase/
   schema.sql         tables, RLS, triggers
   seed.sql           current content
+  storage.sql        media bucket + storage policies
 ```
 
 ---

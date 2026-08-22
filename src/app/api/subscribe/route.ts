@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { subscribers } from "@/db/schema";
-import { addToAudience } from "@/lib/resend";
+import { addContact } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,8 +59,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const synced = await addToAudience(email);
-  if (!synced.ok) console.warn("[subscribe] audience sync:", synced.error);
+  const synced = await addContact(email);
+  if (!synced.ok) console.warn("[subscribe] contact sync:", synced.error);
 
   return Response.json({ ok: true });
 }

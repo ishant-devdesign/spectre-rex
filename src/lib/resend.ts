@@ -32,6 +32,22 @@ const CONTACT_TO = process.env.CONTACT_TO ?? "hello@spectrerex.com";
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
+async function get(
+  path: string,
+): Promise<{ ok: boolean; json: Record<string, unknown> }> {
+  const response = await fetch(`${API}${path}`, {
+    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+    /* Campaign state changes outside this app, so a cached response would
+       show a campaign as unsent after it had gone out. */
+    cache: "no-store",
+  });
+  const json = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  return { ok: response.ok, json };
+}
+
 async function call(
   path: string,
   body: unknown,
@@ -129,25 +145,80 @@ export async function sendContactEmail(
 }
 
 /**
- * Adds an address to the broadcast audience.
+ * Adds an address to the contact list.
  *
- * Called after the row is committed to Postgres, and its failure is not
- * fatal: the database is the record of who subscribed, and the audience is a
- * cache of it. A missing audience id, an expired key or a Resend outage
- * should not turn a successful signup into an error for the visitor.
+ * Resend moved contacts to the account level: the endpoint is POST
+ * /contacts with no audience in the path. The older
+ * /audiences/{id}/contacts shape this used to call is gone, which failed
+ * silently here -- the sync is deliberately non-fatal, so a 404 from Resend
+ * looked identical to a successful signup from the visitor's side.
+ *
+ * RESEND_SEGMENT_ID is optional. Without it the contact lands in the
+ * default list, which is all a single-newsletter studio needs; set it to
+ * file signups into a specific segment later.
+ *
+ * Still non-fatal by design: Postgres is the record of who subscribed and
+ * Resend is a cache of it, so an outage there must not turn a successful
+ * signup into a visible error.
  */
-export async function addToAudience(email: string): Promise<SendResult> {
-  const audienceId = process.env.RESEND_AUDIENCE_ID;
-  if (!resendConfigured() || !audienceId) {
-    return { ok: false, error: "Audience sync is not configured." };
+export async function addContact(email: string): Promise<SendResult> {
+  if (!resendConfigured()) {
+    return { ok: false, error: "Contact sync is not configured." };
   }
 
-  const { ok, json } = await call(`/audiences/${audienceId}/contacts`, {
+  const segmentId = process.env.RESEND_SEGMENT_ID;
+  const { ok, json } = await call("/contacts", {
     email,
     unsubscribed: false,
+    ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
   });
 
   return ok
     ? { ok: true }
     : { ok: false, error: errorFrom(json, "Resend rejected the contact.") };
+}
+
+export interface Broadcast {
+  id: string;
+  name: string | null;
+  subject: string | null;
+  status: string;
+  created_at: string | null;
+  scheduled_at: string | null;
+  sent_at: string | null;
+}
+
+/**
+ * Campaigns, newest first.
+ *
+ * Read-only: the admin panel lists what Resend already knows about rather
+ * than duplicating its composer. Errors are returned rather than thrown so
+ * the page can say why it is empty instead of collapsing into an error
+ * boundary.
+ */
+export async function listBroadcasts(): Promise<{
+  broadcasts: Broadcast[];
+  error: string | null;
+}> {
+  if (!resendConfigured()) {
+    return { broadcasts: [], error: "RESEND_API_KEY is not set." };
+  }
+  try {
+    const { ok, json } = await get("/broadcasts");
+    if (!ok) {
+      return {
+        broadcasts: [],
+        error: errorFrom(json, "Resend rejected the request."),
+      };
+    }
+    const raw = Array.isArray(json.data) ? (json.data as Broadcast[]) : [];
+    const rank = (b: Broadcast) =>
+      Date.parse(b.sent_at ?? b.scheduled_at ?? b.created_at ?? "") || 0;
+    return { broadcasts: [...raw].sort((a, b) => rank(b) - rank(a)), error: null };
+  } catch (error) {
+    return {
+      broadcasts: [],
+      error: error instanceof Error ? error.message : "Network error",
+    };
+  }
 }

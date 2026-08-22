@@ -29,7 +29,7 @@ export function DeleteEntryButton({
         type="button"
         onClick={() => setArmed(true)}
         aria-label={`Delete ${title}`}
-        className="grid h-[30px] w-[30px] place-items-center border border-paper/20 text-paper/45 transition-colors duration-300 hover:border-red-500/70 hover:text-red-400"
+        className="grid h-[30px] w-[30px] shrink-0 place-items-center border border-paper/20 text-paper/45 transition-colors duration-300 hover:border-red-500/70 hover:text-red-400"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -37,12 +37,12 @@ export function DeleteEntryButton({
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="inline-flex shrink-0 items-center gap-1.5">
       <button
         type="button"
         onClick={() => setArmed(false)}
         disabled={busy}
-        className="border border-paper/20 px-2.5 py-1.5 font-pixel text-[9px] tracking-[0.2em] text-paper/55 uppercase transition-colors duration-300 hover:text-paper disabled:opacity-40"
+        className="shrink-0 border border-paper/20 px-2.5 py-1.5 font-pixel text-[9px] tracking-[0.2em] whitespace-nowrap text-paper/55 uppercase transition-colors duration-300 hover:text-paper disabled:opacity-40"
       >
         Cancel
       </button>
@@ -60,7 +60,7 @@ export function DeleteEntryButton({
             setArmed(false);
           }
         }}
-        className="inline-flex items-center gap-1.5 border border-red-500/70 bg-red-500/15 px-2.5 py-1.5 font-pixel text-[9px] tracking-[0.2em] text-red-300 uppercase transition-colors duration-300 hover:bg-red-500 hover:text-night disabled:opacity-50"
+        className="inline-flex shrink-0 items-center gap-1.5 border border-red-500/70 bg-red-500/15 px-2.5 py-1.5 font-pixel text-[9px] tracking-[0.2em] whitespace-nowrap text-red-300 uppercase transition-colors duration-300 hover:bg-red-500 hover:text-night disabled:opacity-50"
       >
         {busy ? (
           <Loader2 className="h-3 w-3 animate-spin" />

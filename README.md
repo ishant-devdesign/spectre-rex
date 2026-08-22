@@ -53,7 +53,7 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | for `/admin` | Supabase anon (publishable) key |
 | `ADMIN_EMAILS` | for `/admin` | Comma-separated allowlist |
 | `RESEND_API_KEY` | for outbound mail | Contact form relay and audience sync |
-| `RESEND_AUDIENCE_ID` | for the newsletter | Resend audience the signup form writes to |
+| `RESEND_SEGMENT_ID` | no | Optional segment for signups; contacts are account-level |
 | `RESEND_FROM` | no | Defaults to `Spectre Rex <no-reply@send.spectrerex.com>` |
 | `CONTACT_TO` | no | Defaults to `hello@spectrerex.com` |
 
@@ -213,7 +213,7 @@ Two public endpoints, both stateless apart from one table:
 | Route | Does | Needs |
 |---|---|---|
 | `POST /api/contact` | Relays the form to `CONTACT_TO` via Resend | `RESEND_API_KEY` |
-| `POST /api/subscribe` | Inserts into `subscribers`, then syncs to the Resend audience | `DATABASE_URL`; Resend optional |
+| `POST /api/subscribe` | Inserts into `subscribers`, then syncs to Resend contacts | `DATABASE_URL`; Resend optional |
 
 Both carry a honeypot field and answer `200` when it is filled, so bots learn
 nothing from the response.
@@ -235,6 +235,12 @@ opt-in can be switched on later without a migration.
 already provides an editor, test sends, scheduling and open/click stats;
 rebuilding that inside the panel would be the most expensive piece of the
 whole system and worse than what it replaced.
+
+`/admin/campaigns` lists them read-only -- subject, status and sent date,
+each linking through to Resend, plus a button to the composer. What was
+missing was visibility, not an editor. It degrades in three steps: no API key
+says so plainly, an API error surfaces the message, and an empty list says
+nothing has been sent.
 
 ### Media and uploads
 
@@ -360,8 +366,7 @@ damage is contained to the subdomain and the team's day-to-day mail is untouched
 2. Add the **DKIM and SPF records** Resend shows you, plus a **DMARC** record.
    Since February 2024 Gmail and Yahoo require all three from bulk senders -- this
    is an entry requirement, not a best practice.
-3. Create an **audience** for subscribers.
-4. Set `RESEND_API_KEY` and `RESEND_AUDIENCE_ID` in `.env.local` and Vercel.
+4. Set `RESEND_API_KEY` in `.env.local` and Vercel. Contacts are account-level in Resend's current API, so no audience id is required.
 
 Campaigns are composed in `/admin`, not by emailing an address. The admin panel
 already has an authenticated 12-block editor and a preview route, so a compose
@@ -428,6 +433,7 @@ provide it (no SMTP); point it at Resend instead, reusing the account from 2.3.
 |---|---|
 | `/admin/projects` | List, create, edit and delete projects |
 | `/admin/signals` | List, create, edit and delete signals |
+| `/admin/campaigns` | Read-only list of Resend broadcasts |
 | `/admin/entries/<kind>/<id>` | Block editor for one entry |
 | `/admin/entries/<kind>/<id>/preview` | Renders through the public component |
 | `/admin/login` | Magic-link sign-in |

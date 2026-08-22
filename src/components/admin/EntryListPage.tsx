@@ -59,13 +59,13 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
           {rows.map((entry) => (
             <li
               key={entry.id}
-              className="group grid gap-3 border-b border-paper/12 py-5 md:grid-cols-12 md:items-center"
+              className="group grid gap-3 border-b border-paper/12 py-5 md:grid-cols-12 md:items-center md:gap-4"
             >
               <Link
                 href={`/admin/entries/${entry.kind}/${entry.id}`}
                 className="contents"
               >
-                <div className="flex items-center gap-3 md:col-span-3">
+                <div className="flex items-center gap-3 md:col-span-2">
                   <span className="grid h-8 w-8 place-items-center border border-paper/20 text-paper/50">
                     <Icon className="h-3.5 w-3.5" />
                   </span>
@@ -73,7 +73,7 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
                     {entry.kind} {entry.code}
                   </span>
                 </div>
-                <div className="md:col-span-6">
+                <div className="min-w-0 md:col-span-5">
                   <p
                     className={`font-display text-[1.15rem] font-bold tracking-[-0.015em] transition-colors group-hover:text-spectre ${
                       entry.title ? "" : "text-paper/45 italic"
@@ -87,13 +87,17 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
                   </p>
                 </div>
               </Link>
-              <div className="flex items-center gap-2.5 md:col-span-3 md:justify-end">
+              {/* Five controls in a three-column track left the delete
+                  button crushed to a sliver. The actions get their own wider
+                  track, wrap on narrow viewports, and every control is
+                  shrink-0 so nothing is compressed below its hit target. */}
+              <div className="flex flex-wrap items-center gap-2 md:col-span-5 md:flex-nowrap md:justify-end">
                 {/* Classified is orthogonal to status -- a published entry can
                     still be redacted and unopenable -- so it needs its own
                     badge rather than replacing the status one. */}
                 {entry.classified ? (
                   <span
-                    className="inline-flex items-center gap-1.5 border border-paper/35 px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] text-paper/70 uppercase"
+                    className="inline-flex shrink-0 items-center gap-1.5 border border-paper/35 px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] text-paper/70 uppercase"
                     title="Redacted in public. Slug returns 404."
                   >
                     <Lock className="h-2.5 w-2.5" />
@@ -101,7 +105,7 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
                   </span>
                 ) : null}
                 <span
-                  className={`inline-flex items-center border px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] uppercase ${
+                  className={`inline-flex shrink-0 items-center border px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] uppercase ${
                     entry.status === "published"
                       ? "border-spectre bg-spectre text-night"
                       : "border-paper/30 text-paper/60"
@@ -111,7 +115,7 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
                 </span>
                 <Link
                   href={`/admin/entries/${entry.kind}/${entry.id}`}
-                  className="border border-paper/20 px-3 py-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/60 uppercase transition-colors duration-300 hover:border-spectre hover:text-spectre"
+                  className="shrink-0 border border-paper/20 px-3 py-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/60 uppercase transition-colors duration-300 hover:border-spectre hover:text-spectre"
                 >
                   Edit
                 </Link>

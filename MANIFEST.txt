@@ -17,6 +17,7 @@ public/assets/img/concept-2.jpg
 public/assets/img/concept-3.jpg
 public/assets/img/hero.jpg
 public/assets/img/studio.jpg
+src/app/(admin)/admin/campaigns/page.tsx
 src/app/(admin)/admin/entries/[kind]/[id]/page.tsx
 src/app/(admin)/admin/entries/[kind]/[id]/preview/page.tsx
 src/app/(admin)/admin/entries/actions.ts

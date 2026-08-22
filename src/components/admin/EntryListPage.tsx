@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Layers, Plus } from "lucide-react";
+import { FileText, Layers, Lock, Plus } from "lucide-react";
 import { createEntry, listEntries, type EntryKind } from "@/app/(admin)/admin/entries/actions";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { DeleteEntryButton } from "@/components/admin/DeleteEntryButton";
@@ -30,7 +30,8 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
           </h1>
           <p className="mt-1.5 font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase">
             {rows.length} total ·{" "}
-            {rows.filter((r) => r.status === "published").length} published
+            {rows.filter((r) => r.status === "published").length} published ·{" "}
+            {rows.filter((r) => r.classified).length} classified
           </p>
         </div>
         <form action={createEntry.bind(null, kind)}>
@@ -86,7 +87,19 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
                   </p>
                 </div>
               </Link>
-              <div className="flex items-center gap-3 md:col-span-3 md:justify-end">
+              <div className="flex items-center gap-2.5 md:col-span-3 md:justify-end">
+                {/* Classified is orthogonal to status -- a published entry can
+                    still be redacted and unopenable -- so it needs its own
+                    badge rather than replacing the status one. */}
+                {entry.classified ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 border border-paper/35 px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] text-paper/70 uppercase"
+                    title="Redacted in public. Slug returns 404."
+                  >
+                    <Lock className="h-2.5 w-2.5" />
+                    Classified
+                  </span>
+                ) : null}
                 <span
                   className={`inline-flex items-center border px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] uppercase ${
                     entry.status === "published"

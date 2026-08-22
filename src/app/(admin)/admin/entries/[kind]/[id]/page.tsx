@@ -25,6 +25,16 @@ export default async function EntryPage({
         <h1 className="font-pixel text-[10px] tracking-[0.3em] text-paper/45 uppercase">
           Editing {entry.kind} {entry.code}
         </h1>
+        {entry.broadcastId ? (
+          <a
+            href={`https://resend.com/broadcasts/${entry.broadcastId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 border border-spectre/60 px-3.5 py-2 font-pixel text-[9.5px] tracking-[0.24em] text-spectre uppercase transition-colors duration-300 hover:bg-spectre hover:text-night"
+          >
+            Campaign drafted
+          </a>
+        ) : null}
         <form action={deleteEntry.bind(null, entry.kind, entry.id)}>
           <button
             type="submit"

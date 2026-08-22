@@ -47,6 +47,7 @@ export const signals = pgTable("signals", {
   publishedOn: date("published_on"),
   classified: boolean("classified").notNull().default(false),
   status: text("status").notNull().default("draft"),
+  broadcastId: text("broadcast_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -64,6 +65,7 @@ export const projects = pgTable("projects", {
   classified: boolean("classified").notNull().default(true),
   status: text("status").notNull().default("draft"),
   sortOrder: integer("sort_order").notNull().default(0),
+  broadcastId: text("broadcast_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

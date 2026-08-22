@@ -237,6 +237,53 @@ export async function addContact(email: string): Promise<SendResult> {
   };
 }
 
+/**
+ * Creates a broadcast in Resend as a DRAFT.
+ *
+ * `send` is deliberately never set. Publishing is not the same decision as
+ * mailing several hundred people, and a send cannot be recalled -- so a
+ * re-publish after a typo fix, or a stray click in the editor, must not be
+ * able to reach the list. A draft appears in Resend ready to review, test
+ * and send by hand.
+ *
+ * Requires the management key: creating a broadcast is not sending, so a
+ * sending-access key is rejected.
+ */
+export async function createBroadcastDraft(input: {
+  name: string;
+  subject: string;
+  html: string;
+  text: string;
+}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const key = manageKey();
+  if (!key) return { ok: false, error: "Resend is not configured." };
+
+  const { ok, json } = await call(
+    "/broadcasts",
+    {
+      from: FROM,
+      reply_to: CONTACT_TO,
+      name: input.name,
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+    },
+    key,
+  );
+
+  if (!ok) {
+    const message = errorFrom(json, "Resend rejected the broadcast.");
+    return {
+      ok: false,
+      error: /restricted|only send/i.test(message)
+        ? "Sending-only API key cannot create broadcasts. Set RESEND_ADMIN_API_KEY to a full-access key."
+        : message,
+    };
+  }
+  const id = typeof json.id === "string" ? json.id : "";
+  return id ? { ok: true, id } : { ok: false, error: "No broadcast id returned." };
+}
+
 /** Sentinel for "the key works, but is not allowed to read". */
 export const RESTRICTED = "restricted-key";
 

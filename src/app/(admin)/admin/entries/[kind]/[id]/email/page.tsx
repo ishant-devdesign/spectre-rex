@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getEntry, type EntryKind } from "../../../actions";
-import { toPublicEntry } from "@/lib/entries";
+import { listPublished, toPublicEntry } from "@/lib/entries";
 import { renderEntryEmail } from "@/lib/email/entryEmail";
 import { CopyField } from "@/components/admin/CopyField";
 
@@ -29,6 +29,15 @@ export default async function EntryEmailPage({
   const entry = await getEntry(kind as EntryKind, id).catch(() => null);
   if (!entry) notFound();
 
+  /* Cards for other work. Pulled from both kinds and interleaved so a
+     signal campaign can surface a project and vice versa -- the point of
+     the email is traffic, and the reader may care about the other one. */
+  const [signals, projects] = await Promise.all([
+    listPublished("signal"),
+    listPublished("project"),
+  ]);
+  const more = [...projects, ...signals].filter((m) => m.id !== entry.id);
+
   const email = renderEntryEmail(
     toPublicEntry({
       id: entry.id,
@@ -44,6 +53,7 @@ export default async function EntryEmailPage({
       dateLabel: "",
       updatedAt: entry.updatedAt,
     }),
+    more,
   );
 
   return (
@@ -63,6 +73,11 @@ export default async function EntryEmailPage({
         Paste the HTML into Resend &rarr; Broadcasts &rarr; Upload HTML. The
         unsubscribe placeholder is already in the footer; Resend substitutes it
         on send.
+      </p>
+      <p className="mt-2 max-w-[70ch] text-[14.5px] leading-relaxed text-paper/50">
+        It is a teaser, not the whole piece: hero, a short pull, one call to
+        action, then cards for other work. A campaign that reproduces the
+        article gives nobody a reason to visit the site.
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,620px)] lg:items-start">

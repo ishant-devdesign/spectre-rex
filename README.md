@@ -55,7 +55,7 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `RESEND_API_KEY` | for outbound mail | Contact form relay and audience sync |
 | `RESEND_FROM` | no | Defaults to `Spectre Rex <no-reply@send.spectrerex.com>` |
 | `CONTACT_TO` | no | Defaults to `hello@spectrerex.com` |
-| `RESEND_ADMIN_API_KEY` | no | Full-access key, only for the campaigns list |
+| `RESEND_ADMIN_API_KEY` | for campaigns | Full-access key: listing broadcasts, creating contacts and drafting campaigns all need it. A sending key cannot do any of them. |
 
 `NEXT_PUBLIC_SUPABASE_URL` is also read at **build** time, by `next.config.ts`, to allowlist the
 Storage host for `next/image`. Set it in Vercel before the first deploy or uploaded images fail to
@@ -266,6 +266,21 @@ opt-in can be switched on later without a migration.
 already provides an editor, test sends, scheduling and open/click stats;
 rebuilding that inside the panel would be the most expensive piece of the
 whole system and worse than what it replaced.
+
+**Publishing an entry drafts its campaign automatically.** The first time an
+entry moves from draft to published, `saveEntry` renders the teaser and
+creates a **draft** broadcast in Resend, storing its id in `broadcast_id`.
+The editor then shows a "Campaign drafted" link through to it.
+
+It never sends. Publishing to the site and mailing the list are separate
+decisions and only one of them can be undone -- a re-publish after a typo
+fix must not be able to reach the list. Three guards keep it honest: only on
+the draft-to-published transition, only once per entry via `broadcast_id`,
+and never for classified entries, whose copy is scrambled by the read layer
+and would announce nothing.
+
+Failure is swallowed. The entry publishes either way; a campaign that did
+not get drafted can be written by hand.
 
 `/admin/campaigns` lists them read-only -- subject, status and sent date,
 each linking through to Resend, plus a button to the composer. What was

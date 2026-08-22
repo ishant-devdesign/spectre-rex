@@ -135,6 +135,17 @@ begin
 end $$;
 
 -- =====================================================================
+-- broadcast_id
+--
+-- Set when publishing an entry creates a draft campaign in Resend. Its only
+-- job is idempotency: without it, every save of an already-published entry
+-- would create another draft, and an editor fixing three typos would leave
+-- three campaigns behind.
+-- =====================================================================
+alter table public.signals  add column if not exists broadcast_id text;
+alter table public.projects add column if not exists broadcast_id text;
+
+-- =====================================================================
 -- redaction columns — REMOVED
 --
 -- signals.redaction_blocks, signals.date_redacted and

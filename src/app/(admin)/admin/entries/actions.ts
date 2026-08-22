@@ -4,11 +4,19 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { projects, signals } from "@/db/schema";
+import {
+  projects as projectsTable,
+  signals as signalsTable,
+} from "@/db/schema";
+const projects = projectsTable;
+const signals = signalsTable;
 import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/supabase/config";
 import { parseBlocks, type Block } from "@/lib/blocks";
 import { classifiedSlug, slugify } from "@/lib/redact";
+import { createBroadcastDraft } from "@/lib/resend";
+import { listPublished, toPublicEntry } from "@/lib/entries";
+import { renderEntryEmail } from "@/lib/email/entryEmail";
 
 export type EntryKind = "signal" | "project";
 
@@ -24,6 +32,7 @@ export interface Entry {
   blocks: Block[];
   status: "draft" | "published";
   classified: boolean;
+  broadcastId: string | null;
   updatedAt: Date;
 }
 
@@ -63,6 +72,7 @@ export async function listEntries(): Promise<{
         blocks: parseBlocks(row.blocks),
         status: row.status === "published" ? ("published" as const) : ("draft" as const),
         classified: row.classified,
+        broadcastId: row.broadcastId ?? null,
         updatedAt: row.updatedAt,
       })),
       ...projectRows.map((row) => ({
@@ -81,6 +91,7 @@ export async function listEntries(): Promise<{
         blocks: parseBlocks(row.blocks),
         status: row.status === "published" ? ("published" as const) : ("draft" as const),
         classified: row.classified,
+        broadcastId: row.broadcastId ?? null,
         updatedAt: row.updatedAt,
       })),
     ].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
@@ -114,6 +125,7 @@ export async function getEntry(
       blocks: parseBlocks(row.blocks),
       status: row.status === "published" ? "published" : "draft",
       classified: row.classified,
+      broadcastId: row.broadcastId ?? null,
       updatedAt: row.updatedAt,
     };
   }
@@ -131,6 +143,7 @@ export async function getEntry(
     blocks: parseBlocks(row.blocks),
     status: row.status === "published" ? "published" : "draft",
     classified: row.classified,
+    broadcastId: row.broadcastId ?? null,
     updatedAt: row.updatedAt,
   };
 }
@@ -206,9 +219,89 @@ export interface SaveInput {
   blocks: Block[];
 }
 
+/**
+ * Creates a draft campaign the first time an entry goes live.
+ *
+ * Three guards, each earning its place:
+ *
+ *   - Only on the draft -> published transition. Saving an already-live
+ *     entry must not produce a second campaign.
+ *   - Only once, tracked by broadcast_id. Belt and braces with the above,
+ *     because status could be toggled back and forth.
+ *   - Never for classified entries. Their copy is scrambled by the read
+ *     layer, so the campaign would be gibberish announcing nothing.
+ *
+ * It creates a DRAFT and never sends. Publishing to the site and mailing
+ * the list are separate decisions, and only one of them is reversible.
+ */
+async function draftCampaign(kind: EntryKind, id: string): Promise<void> {
+  try {
+    const entry = await getEntry(kind, id);
+    if (!entry || entry.classified) return;
+
+    const [signals, projects] = await Promise.all([
+      listPublished("signal"),
+      listPublished("project"),
+    ]);
+    const email = renderEntryEmail(
+      toPublicEntry({
+        id: entry.id,
+        kind: entry.kind,
+        code: entry.code,
+        slug: entry.slug,
+        title: entry.title,
+        subtitle: entry.subtitle,
+        summary: entry.summary,
+        heroImage: entry.heroImage || null,
+        blocks: entry.blocks,
+        classified: entry.classified,
+        dateLabel: "",
+        updatedAt: entry.updatedAt,
+      }),
+      [...projects, ...signals].filter((m) => m.id !== entry.id),
+    );
+
+    const created = await createBroadcastDraft({
+      name: `${entry.kind} ${entry.code} - ${entry.title}`.slice(0, 190),
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+    });
+    if (!created.ok) {
+      console.warn("[campaign] draft not created:", created.error);
+      return;
+    }
+
+    const db = getDb();
+    if (kind === "signal") {
+      await db
+        .update(signalsTable)
+        .set({ broadcastId: created.id })
+        .where(eq(signalsTable.id, id));
+    } else {
+      await db
+        .update(projectsTable)
+        .set({ broadcastId: created.id })
+        .where(eq(projectsTable.id, id));
+    }
+  } catch (error) {
+    /* Never fail the save. The entry is published either way, and a
+       campaign that did not get drafted can be written by hand. */
+    console.warn("[campaign] draft failed:", error);
+  }
+}
+
 export async function saveEntry(input: SaveInput) {
   await assertAdmin();
   const db = getDb();
+
+  /* Read the pre-save state so the publish transition can be detected. */
+  const before = await getEntry(input.kind, input.id).catch(() => null);
+  const goingLive =
+    input.status === "published" &&
+    before?.status !== "published" &&
+    !before?.broadcastId &&
+    !input.classified;
   /**
    * Slug is derived, never typed.
    *
@@ -264,6 +357,9 @@ export async function saveEntry(input: SaveInput) {
      them would leave the live site showing the previous version. */
   revalidatePath(`/${input.kind}s`);
   revalidatePath(`/${input.kind}s/${slug}`);
+
+  if (goingLive) await draftCampaign(input.kind, input.id);
+
   return { ok: true as const, slug };
 }
 

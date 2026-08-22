@@ -8,6 +8,7 @@ import { projects, signals } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/supabase/config";
 import { parseBlocks, type Block } from "@/lib/blocks";
+import { classifiedSlug, slugify } from "@/lib/redact";
 
 export type EntryKind = "signal" | "project";
 
@@ -19,6 +20,7 @@ export interface Entry {
   title: string;
   subtitle: string;
   summary: string;
+  heroImage: string;
   blocks: Block[];
   status: "draft" | "published";
   classified: boolean;
@@ -32,13 +34,6 @@ async function assertAdmin() {
   } = await supabase.auth.getUser();
   if (!isAdminEmail(user?.email)) throw new Error("Not authorised.");
 }
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
 
 /* ------------------------------------------------------------------ */
 /* Reads                                                               */
@@ -64,6 +59,7 @@ export async function listEntries(): Promise<{
         title: row.title,
         subtitle: row.subtitle ?? "",
         summary: row.excerpt ?? "",
+        heroImage: row.heroImage ?? "",
         blocks: parseBlocks(row.blocks),
         status: row.status === "published" ? ("published" as const) : ("draft" as const),
         classified: row.classified,
@@ -81,6 +77,7 @@ export async function listEntries(): Promise<{
         title: row.codename ?? "",
         subtitle: row.subtitle ?? "",
         summary: row.summary ?? "",
+        heroImage: row.heroImage ?? "",
         blocks: parseBlocks(row.blocks),
         status: row.status === "published" ? ("published" as const) : ("draft" as const),
         classified: row.classified,
@@ -113,6 +110,7 @@ export async function getEntry(
       title: row.title,
       subtitle: row.subtitle ?? "",
       summary: row.excerpt ?? "",
+      heroImage: row.heroImage ?? "",
       blocks: parseBlocks(row.blocks),
       status: row.status === "published" ? "published" : "draft",
       classified: row.classified,
@@ -129,6 +127,7 @@ export async function getEntry(
     title: row.codename ?? "",
     subtitle: row.subtitle ?? "",
     summary: row.summary ?? "",
+    heroImage: row.heroImage ?? "",
     blocks: parseBlocks(row.blocks),
     status: row.status === "published" ? "published" : "draft",
     classified: row.classified,
@@ -140,17 +139,38 @@ export async function getEntry(
 /* Writes                                                              */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Next sequential code for a kind, zero-padded to two digits.
+ *
+ * Codes were a timestamp fragment, which produced things like "SIGNAL 7431"
+ * -- unreadable and unordered. They are author-facing identifiers, so they
+ * count up. Derived from max(code) rather than count(*) so deleting an
+ * entry never causes a collision with a code already in use.
+ */
+async function nextCode(kind: EntryKind): Promise<string> {
+  const db = getDb();
+  const rows =
+    kind === "signal"
+      ? await db.select({ code: signals.code }).from(signals)
+      : await db.select({ code: projects.code }).from(projects);
+  const highest = rows.reduce((max, row) => {
+    const value = Number.parseInt(row.code, 10);
+    return Number.isFinite(value) && value > max ? value : max;
+  }, 0);
+  return String(highest + 1).padStart(2, "0");
+}
+
 export async function createEntry(kind: EntryKind) {
   await assertAdmin();
   const db = getDb();
-  const stamp = Date.now().toString().slice(-4);
+  const code = await nextCode(kind);
 
   if (kind === "signal") {
     const [row] = await db
       .insert(signals)
       .values({
-        code: stamp,
-        slug: `untitled-${stamp}`,
+        code,
+        slug: `signal-${code}`,
         title: "Untitled signal",
         status: "draft",
       })
@@ -162,8 +182,8 @@ export async function createEntry(kind: EntryKind) {
   const [row] = await db
     .insert(projects)
     .values({
-      code: stamp,
-      slug: `untitled-${stamp}`,
+      code,
+      slug: `project-${code}`,
       codename: "Untitled project",
       status: "draft",
     })
@@ -180,6 +200,7 @@ export interface SaveInput {
   slug: string;
   code: string;
   summary: string;
+  heroImage: string;
   classified: boolean;
   status: "draft" | "published";
   blocks: Block[];
@@ -188,7 +209,19 @@ export interface SaveInput {
 export async function saveEntry(input: SaveInput) {
   await assertAdmin();
   const db = getDb();
-  const slug = slugify(input.slug || input.title) || `entry-${Date.now()}`;
+  /**
+   * Slug is derived, never typed.
+   *
+   * A classified entry gets an opaque slug built from its kind and code.
+   * Deriving it from the title instead would defeat the redaction entirely
+   * -- /projects/dragon-reborn tells a reader exactly what the scrambled
+   * headline was hiding. Both halves of that rule have to live here rather
+   * than in the form, because the form is not the only caller and a client
+   * can send anything.
+   */
+  const slug = input.classified
+    ? classifiedSlug(input.kind, input.code)
+    : slugify(input.title) || classifiedSlug(input.kind, input.code);
   const now = new Date();
 
   if (input.kind === "signal") {
@@ -200,6 +233,7 @@ export async function saveEntry(input: SaveInput) {
         slug,
         code: input.code,
         excerpt: input.summary || null,
+        heroImage: input.heroImage || null,
         classified: input.classified,
         status: input.status,
         blocks: input.blocks,
@@ -215,6 +249,7 @@ export async function saveEntry(input: SaveInput) {
         slug,
         code: input.code,
         summary: input.summary || null,
+        heroImage: input.heroImage || null,
         classified: input.classified,
         status: input.status,
         blocks: input.blocks,
@@ -225,6 +260,10 @@ export async function saveEntry(input: SaveInput) {
 
   revalidatePath("/admin/entries");
   revalidatePath(`/admin/entries/${input.kind}/${input.id}`);
+  /* The public pages read the same rows, so a save that did not revalidate
+     them would leave the live site showing the previous version. */
+  revalidatePath(`/${input.kind}s`);
+  revalidatePath(`/${input.kind}s/${slug}`);
   return { ok: true as const, slug };
 }
 
@@ -237,5 +276,6 @@ export async function deleteEntry(kind: EntryKind, id: string) {
     await db.delete(projects).where(eq(projects.id, id));
   }
   revalidatePath("/admin/entries");
-  redirect("/admin/entries");
+  revalidatePath(`/${kind}s`);
+  redirect(kind === "project" ? "/admin/projects" : "/admin/signals");
 }

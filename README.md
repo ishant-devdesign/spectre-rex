@@ -52,8 +52,10 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `NEXT_PUBLIC_SUPABASE_URL` | for `/admin` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | for `/admin` | Supabase anon (publishable) key |
 | `ADMIN_EMAILS` | for `/admin` | Comma-separated allowlist |
-| `RESEND_API_KEY` | for subscribers | Not wired up yet -- see section 2.3 |
-| `RESEND_AUDIENCE_ID` | for subscribers | Not wired up yet -- see section 2.3 |
+| `RESEND_API_KEY` | for outbound mail | Contact form relay and audience sync |
+| `RESEND_AUDIENCE_ID` | for the newsletter | Resend audience the signup form writes to |
+| `RESEND_FROM` | no | Defaults to `Spectre Rex <no-reply@send.spectrerex.com>` |
+| `CONTACT_TO` | no | Defaults to `hello@spectrerex.com` |
 
 `NEXT_PUBLIC_SUPABASE_URL` is also read at **build** time, by `next.config.ts`, to allowlist the
 Storage host for `next/image`. Set it in Vercel before the first deploy or uploaded images fail to
@@ -69,7 +71,7 @@ carrying for no gain.
 They are two different protocols into the same Postgres, not a duplicate.
 `@supabase/supabase-js` talks HTTPS to PostgREST and is used **only for auth** --
 login, sessions, and storage uploads. Everything else (`signals`, `projects`,
-`contact_messages`) goes over the Postgres wire protocol through `pg` and Drizzle.
+`subscribers`) goes over the Postgres wire protocol through `pg` and Drizzle.
 
 The reason matters: the admin panel has to read drafts and write content. Over
 PostgREST that requires `SUPABASE_SERVICE_ROLE_KEY`, which bypasses every RLS
@@ -113,12 +115,80 @@ Nothing touches the database at build time: `src/db/index.ts` creates its pool l
 |---|---|---|
 | `signals` | Transmissions / the archive | rows where `status = 'published'` |
 | `projects` | Concept entries | rows where `status = 'published'` |
-| `contact_messages` | Contact form submissions | never -- insert only |
 | `subscribers` | Mailing list | never -- insert only |
 
 RLS is enabled on all four. The app's server code connects with the Postgres role from
 `DATABASE_URL`, which owns the tables and so bypasses RLS -- that is what lets the admin panel read
 everything while the anon key sees only published rows.
+
+### Entries: signals and projects
+
+One model, one renderer, one set of rules. The two differ only by `kind` and
+which table they live in.
+
+| Status | Listed | Slug opens | Title, summary, hero, body |
+|---|---|---|---|
+| `draft` | no | 404 | -- |
+| `published` | yes | yes | as written |
+| `published` + `classified` | yes | **404** | scrambled / withheld |
+
+**Redaction happens on the server**, in `src/lib/entries.ts`. A classified
+entry's real title never enters the HTML or the RSC payload, so view-source
+defeats nothing. Scrambling in a component would ship the plaintext and then
+hide it, which is theatre. The hero image is dropped rather than blurred: a
+CSS filter is removable with dev tools, and a concept image gives away more
+than a title does.
+
+`scramble()` in `src/lib/redact.ts` maps each visible character to a cipher
+glyph, preserving length and word boundaries -- `Dragon Reborn` becomes
+`OQ?AGY ZCAOZ1`. It is seeded from the entry id, so the same entry always
+redacts to the same string instead of flickering between requests.
+
+**Slugs and codes are derived, never typed.** Codes count up per kind from
+`max(code)`, so deleting an entry cannot cause a collision. Slugs come from
+the title -- except for classified entries, which get `kind-code`. A slug
+generated from the title would defeat the whole exercise:
+`/projects/dragon-reborn` announces exactly what the scrambled headline was
+hiding.
+
+Classified rows are not wrapped in links anywhere. Offering a click that
+dead-ends in a 404 is worse than offering none, and the prev/next footer
+skips them for the same reason.
+
+`EntryArticle` is rendered by the public detail page **and** by the admin
+preview, through the same `toPublicEntry()` boundary. Preview used to be a
+separate 760px article, so authors were shown something no reader would ever
+see; a classified draft now previews as scrambled, because that is what ships.
+
+### Newsletter and contact
+
+Two public endpoints, both stateless apart from one table:
+
+| Route | Does | Needs |
+|---|---|---|
+| `POST /api/contact` | Relays the form to `CONTACT_TO` via Resend | `RESEND_API_KEY` |
+| `POST /api/subscribe` | Inserts into `subscribers`, then syncs to the Resend audience | `DATABASE_URL`; Resend optional |
+
+Both carry a honeypot field and answer `200` when it is filled, so bots learn
+nothing from the response.
+
+The contact relay puts the visitor's address in **Reply-To**, never in `From`.
+Sending as an arbitrary third party breaks DKIM alignment and is the exact
+pattern spam filters penalise; replying from Zoho still reaches them.
+
+Signup is **single opt-in** -- no confirmation email. Re-subscribing is not an
+error: the insert is `on conflict (lower(email)) do nothing`, matching the
+case-insensitive unique index. The Postgres row is the record of who
+subscribed and the Resend audience is a cache of it, so a failed sync is
+logged and ignored rather than shown to the visitor.
+
+`confirmed` and `confirmed_at` exist on the table but are unused, so double
+opt-in can be switched on later without a migration.
+
+**Campaigns are composed in the Resend dashboard**, not in `/admin`. Resend
+already provides an editor, test sends, scheduling and open/click stats;
+rebuilding that inside the panel would be the most expensive piece of the
+whole system and worse than what it replaced.
 
 ### Media and uploads
 
@@ -322,10 +392,10 @@ middleware, the login form's `next` parameter and existing bookmarks point at th
 All of it lives in the `(admin)` route group, so it inherits none of the site chrome: no nav,
 footer, smooth scroll, page transition or first-load intro.
 
-**There is no inbox.** Contact form submissions are still written to `contact_messages` by
-`/api/contact`, but nothing in the panel reads them -- view them in the Supabase table editor, or
-wire the form to email later. Deleting the UI rather than hiding it keeps `ADMIN_EMAILS`-gated
-surface area to the two things that are actually used.
+**There is no inbox, and nothing to check.** `/api/contact` relays submissions straight to
+`CONTACT_TO` through Resend, so they land in the Zoho group the team already reads. The
+`contact_messages` table has been dropped -- an unused table with an open insert policy is a spam
+target nobody is watching.
 
 ### Access control
 

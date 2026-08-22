@@ -10,7 +10,6 @@
 --   Tables
 --     signals           transmissions / the public archive
 --     projects          concept entries, published and classified
---     contact_messages  inbound from the contact form
 --     subscribers       mailing list
 -- =====================================================================
 
@@ -99,26 +98,38 @@ create trigger projects_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- =====================================================================
--- contact_messages — written by /api/contact
+-- hero image
+--
+-- Added after the fact, so these are ALTERs rather than columns in the
+-- CREATE above: the table already exists in deployed projects and
+-- "create table if not exists" would skip a changed definition silently.
+--
+-- projects.image_path is folded into hero_image and dropped. Signals and
+-- projects are the same entity with a different label; two names for one
+-- concept is how the two code paths drifted apart in the first place.
 -- =====================================================================
-create table if not exists public.contact_messages (
-  id           uuid primary key default gen_random_uuid(),
-  channel      text        not null default 'general'
-                 check (channel in ('general', 'press', 'business')),
-  name         text,
-  email        text        not null check (position('@' in email) > 1),
-  subject      text,
-  message      text        not null check (char_length(message) between 1 and 5000),
-  source_path  text,
-  user_agent   text,
-  handled      boolean     not null default false,
-  created_at   timestamptz not null default now()
-);
+alter table public.signals  add column if not exists hero_image text;
+alter table public.projects add column if not exists hero_image text;
 
-create index if not exists contact_messages_created_idx
-  on public.contact_messages (created_at desc);
-create index if not exists contact_messages_unhandled_idx
-  on public.contact_messages (handled, created_at desc) where not handled;
+update public.projects
+   set hero_image = image_path
+ where hero_image is null
+   and image_path is not null;
+
+alter table public.projects drop column if exists image_path;
+
+-- =====================================================================
+-- contact_messages — REMOVED
+--
+-- The contact form used to write here and an admin inbox read it back. Both
+-- are gone: /api/contact now relays straight to the studio's Zoho group via
+-- Resend, so the mail lands where the team already works instead of in a
+-- table someone has to remember to open.
+--
+-- Dropped rather than left in place, because an unused table with an open
+-- insert policy is a spam target with no one watching it.
+-- =====================================================================
+drop table if exists public.contact_messages;
 
 -- =====================================================================
 -- subscribers
@@ -149,7 +160,6 @@ create unique index if not exists subscribers_email_key
 -- =====================================================================
 alter table public.signals          enable row level security;
 alter table public.projects         enable row level security;
-alter table public.contact_messages enable row level security;
 alter table public.subscribers      enable row level security;
 
 drop policy if exists "published signals are public" on public.signals;
@@ -161,11 +171,6 @@ drop policy if exists "published projects are public" on public.projects;
 create policy "published projects are public"
   on public.projects for select
   using (status = 'published');
-
-drop policy if exists "anyone may send a message" on public.contact_messages;
-create policy "anyone may send a message"
-  on public.contact_messages for insert
-  with check (true);
 
 drop policy if exists "anyone may subscribe" on public.subscribers;
 create policy "anyone may subscribe"

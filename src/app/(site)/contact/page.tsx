@@ -7,6 +7,7 @@ import { PixelTag } from "@/components/ui/chrome";
 import { PageHero } from "@/components/sections/PageHero";
 import { Clock, FileText, MapPin, Phone, type LucideIcon } from "lucide-react";
 import { ContactForm } from "@/components/sections/ContactForm";
+import { SubscribeForm } from "@/components/sections/SubscribeForm";
 import { DragonMark } from "@/components/svg/DragonMark";
 
 export const metadata: Metadata = {
@@ -138,6 +139,14 @@ export default function ContactPage() {
 
           <Reveal delay={0.1} y={30}>
             <ContactForm />
+
+            {/* Subscribe sits under the form rather than in its own section:
+                someone who just wrote to the studio is the most likely person
+                to want the devlog, and a separate band would repeat the same
+                dark treatment twice on one page. */}
+            <div className="mt-12 border-t border-paper/12 pt-10">
+              <SubscribeForm />
+            </div>
           </Reveal>
         </div>
       </section>

@@ -18,6 +18,7 @@ import {
 } from "@/lib/blocks";
 import { saveEntry, type Entry } from "@/app/(admin)/admin/entries/actions";
 import { ImageField } from "./ImageField";
+import { slugify } from "@/lib/redact";
 
 const FIELD =
   "w-full border border-paper/20 bg-white/[0.03] px-3.5 py-2.5 font-body text-[14.5px] text-paper placeholder:text-paper/25 outline-none transition-colors duration-300 focus:border-spectre";
@@ -27,9 +28,8 @@ const LABEL =
 export function EntryEditor({ entry }: { entry: Entry }) {
   const [title, setTitle] = useState(entry.title);
   const [subtitle, setSubtitle] = useState(entry.subtitle);
-  const [slug, setSlug] = useState(entry.slug);
-  const [code, setCode] = useState(entry.code);
   const [summary, setSummary] = useState(entry.summary);
+  const [heroImage, setHeroImage] = useState(entry.heroImage);
   const [classified, setClassified] = useState(entry.classified);
   const [status, setStatus] = useState(entry.status);
   const [blocks, setBlocks] = useState<Block[]>(entry.blocks);
@@ -62,9 +62,10 @@ export function EntryEditor({ entry }: { entry: Entry }) {
         id: entry.id,
         title,
         subtitle,
-        slug,
-        code,
+        slug: entry.slug,
+        code: entry.code,
         summary,
+        heroImage,
         classified,
         status: nextStatus,
         blocks,
@@ -105,29 +106,37 @@ export function EntryEditor({ entry }: { entry: Entry }) {
               />
             </div>
           </div>
+          {/* Code and slug are derived, not typed. The code counts up per
+              kind; the slug comes from the title, or from the code when the
+              entry is classified so the URL cannot leak the headline the
+              scrambler is hiding. Shown read-only because the author still
+              needs to know the resulting address. */}
           <div className="grid gap-4 md:grid-cols-[100px_1fr]">
             <div>
-              <label className={LABEL} htmlFor="code">
-                Code
-              </label>
-              <input
-                id="code"
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
-                className={FIELD}
-              />
+              <span className={LABEL}>Code</span>
+              <p className="border border-paper/10 bg-white/[0.015] px-3.5 py-2.5 font-body text-[14.5px] text-paper/50">
+                {entry.code}
+              </p>
             </div>
             <div>
-              <label className={LABEL} htmlFor="slug">
-                Slug
-              </label>
-              <input
-                id="slug"
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-                className={FIELD}
-              />
+              <span className={LABEL}>Slug (automatic)</span>
+              <p className="truncate border border-paper/10 bg-white/[0.015] px-3.5 py-2.5 font-body text-[14.5px] text-paper/50">
+                /{entry.kind}s/
+                {classified
+                  ? `${entry.kind}-${entry.code}`
+                  : slugify(title) || `${entry.kind}-${entry.code}`}
+              </p>
             </div>
+          </div>
+
+          <div>
+            <span className={LABEL}>Hero image</span>
+            <ImageField value={heroImage} onChange={setHeroImage} />
+            <p className="mt-2 text-[12.5px] leading-relaxed text-paper/35">
+              Shown full width under the headline. Hidden from the public on
+              classified entries -- the listing draws its noise grid instead,
+              because a concept image gives away more than a title does.
+            </p>
           </div>
           <div>
             <label className={LABEL} htmlFor="summary">

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Lock } from "lucide-react";
-import { CLASSIFIED, CONCEPTS } from "@/data/content";
+import { listPublished } from "@/lib/entries";
 import { Reveal, Words } from "@/components/motion/bits";
 import { PixelTag, Chip, Redacted } from "@/components/ui/chrome";
 import { ConceptCard } from "@/components/sections/ConceptCard";
+import { TransitionLink } from "@/components/transition/TransitionLink";
 import { PixelEgg } from "@/components/ui/PixelEgg";
 import { PageHero } from "@/components/sections/PageHero";
 
@@ -101,7 +102,16 @@ function ClassifiedCard({
 
 /* ------------------------------------------------------------------ */
 
-export default function ProjectsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProjectsPage() {
+  /* Published only. Classified rows are still listed -- their existence is
+     the point -- but arrive already scrambled and stripped of imagery, and
+     they are not wrapped in a link because their slug 404s by design. */
+  const entries = await listPublished("project");
+  const visible = entries.filter((entry) => !entry.classified);
+  const classified = entries.filter((entry) => entry.classified);
+
   return (
     <>
       {/* ============================ HEADER =========================== */}
@@ -115,8 +125,12 @@ export default function ProjectsPage() {
             </Reveal>
             <Reveal delay={1.05} scroll={false}>
               <div className="flex gap-3">
-                <Chip tone="paper">Concepts — 03</Chip>
-                <Chip tone="spectre">Classified — 03</Chip>
+                <Chip tone="paper">
+                  Concepts — {String(visible.length).padStart(2, "0")}
+                </Chip>
+                <Chip tone="spectre">
+                  Classified — {String(classified.length).padStart(2, "0")}
+                </Chip>
               </div>
             </Reveal>
           </div>
@@ -136,16 +150,35 @@ export default function ProjectsPage() {
             </Reveal>
           </div>
           <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-            {CONCEPTS.map((c, i) => (
-              <Reveal key={c.index} delay={i * 0.1}>
-                <ConceptCard
-                  index={c.index}
-                  image={c.image}
-                  blocks={c.blocks}
-                  dark={false}
-                />
+            {visible.map((entry, i) => (
+              <Reveal key={entry.id} delay={i * 0.1}>
+                <TransitionLink
+                  href={`/projects/${entry.slug}`}
+                  aria-label={entry.title || `Project ${entry.code}`}
+                  className="group block"
+                >
+                  <ConceptCard
+                    index={entry.code}
+                    image={entry.heroImage ?? "/assets/img/concept-1.jpg"}
+                    blocks={0}
+                    dark={false}
+                  />
+                  <p className="mt-4 font-display text-[1.15rem] font-bold tracking-[-0.015em] transition-colors group-hover:text-spectre">
+                    {entry.title}
+                  </p>
+                  {entry.summary ? (
+                    <p className="mt-1.5 text-[14px] leading-relaxed text-ink/50">
+                      {entry.summary}
+                    </p>
+                  ) : null}
+                </TransitionLink>
               </Reveal>
             ))}
+            {visible.length === 0 ? (
+              <p className="col-span-full border border-ink/10 bg-ink/[0.02] px-6 py-14 text-center text-[15px] text-ink/45">
+                Nothing declassified yet.
+              </p>
+            ) : null}
           </div>
 
           <div className="mt-24 flex flex-wrap items-end justify-between gap-6 md:mt-32">
@@ -159,15 +192,25 @@ export default function ProjectsPage() {
             </Reveal>
           </div>
           <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-            {CLASSIFIED.map((c, i) => (
-              <Reveal key={c.index} delay={i * 0.1}>
+            {classified.map((entry, i) => (
+              <Reveal key={entry.id} delay={i * 0.1}>
+                {/* Not a link: the slug returns 404 for classified entries,
+                    and offering a click that dead-ends is worse than none. */}
                 <ClassifiedCard
-                  index={c.index}
-                  blocks={c.blocks}
-                  seed={c.seed}
+                  index={entry.code}
+                  blocks={Math.max(6, entry.title.length)}
+                  seed={Number.parseInt(entry.code, 10) || i + 1}
                 />
+                <p className="mt-4 truncate font-display text-[1.15rem] font-bold tracking-[-0.015em] text-ink/40 select-none">
+                  {entry.title}
+                </p>
               </Reveal>
             ))}
+            {classified.length === 0 ? (
+              <p className="col-span-full border border-ink/10 bg-ink/[0.02] px-6 py-14 text-center text-[15px] text-ink/45">
+                No classified entries.
+              </p>
+            ) : null}
           </div>
         </div>
       </section>

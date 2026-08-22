@@ -67,7 +67,7 @@ update public.signals set redaction_blocks = 5, date_redacted = true
 -- projects — visible concepts
 -- ---------------------------------------------------------------------
 insert into public.projects
-  (code, slug, codename, summary, image_path, redaction_blocks,
+  (code, slug, codename, summary, hero_image, redaction_blocks,
    classified, status, sort_order, blocks)
 values
   (
@@ -112,7 +112,7 @@ values
 on conflict (code) do update set
   slug             = excluded.slug,
   summary          = excluded.summary,
-  image_path       = excluded.image_path,
+  hero_image       = excluded.hero_image,
   redaction_blocks = excluded.redaction_blocks,
   classified       = excluded.classified,
   status           = excluded.status,
@@ -120,8 +120,8 @@ on conflict (code) do update set
   blocks           = excluded.blocks;
 
 -- ---------------------------------------------------------------------
--- contact_messages and subscribers intentionally start empty: they are
--- filled by the contact form and the mailing list.
+-- subscribers intentionally starts empty: it is filled by the newsletter
+-- signup form on /contact.
 -- ---------------------------------------------------------------------
 
 select

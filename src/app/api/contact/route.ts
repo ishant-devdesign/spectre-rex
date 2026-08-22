@@ -1,5 +1,4 @@
-import { contactMessages } from "@/db/schema";
-import { getDb } from "@/db";
+import { sendContactEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +9,13 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const reject = (error: string, status = 400) =>
   Response.json({ ok: false, error }, { status });
 
+/**
+ * Relays the contact form to the studio inbox.
+ *
+ * Nothing is stored. Submissions used to land in a `contact_messages` table
+ * read by an admin inbox; both are gone, because an inbox nobody opens is
+ * worse than no inbox -- mail arrives where the team already works.
+ */
 export async function POST(request: Request) {
   let payload: Record<string, unknown>;
   try {
@@ -34,26 +40,23 @@ export async function POST(request: Request) {
   if (message.length > 5000) return reject("That message is too long.");
   if (!CHANNELS.has(channel)) return reject("Unknown channel.");
 
-  try {
-    await getDb()
-      .insert(contactMessages)
-      .values({
-        channel,
-        name: str("name") || null,
-        email,
-        subject: str("subject") || null,
-        message,
-        sourcePath: "/contact",
-        userAgent: request.headers.get("user-agent")?.slice(0, 500) ?? null,
-      });
-    return Response.json({ ok: true });
-  } catch (error) {
-    /* The database is optional for the site to function. Fail loudly enough
-       to debug, but let the UI offer the email fallback instead. */
-    console.error("[contact] insert failed:", error);
+  const result = await sendContactEmail({
+    channel,
+    name: str("name"),
+    email,
+    subject: str("subject"),
+    message,
+  });
+
+  if (!result.ok) {
+    /* Logged for diagnosis, but the visitor is told only that it failed --
+       the UI then offers the mailto fallback, which always works. */
+    console.error("[contact] send failed:", result.error);
     return Response.json(
-      { ok: false, error: "The message store is unavailable right now." },
+      { ok: false, error: "We could not send that just now." },
       { status: 503 },
     );
   }
+
+  return Response.json({ ok: true });
 }

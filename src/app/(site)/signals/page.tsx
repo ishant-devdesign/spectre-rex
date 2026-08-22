@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { SIGNALS } from "@/data/content";
+import { listPublished } from "@/lib/entries";
 import { Reveal } from "@/components/motion/bits";
 import { PixelTag, Chip } from "@/components/ui/chrome";
-import { SignalRow } from "@/components/sections/SignalRow";
+import { EntryRow } from "@/components/sections/EntryRow";
 import { PageHero } from "@/components/sections/PageHero";
 
 export const metadata: Metadata = {
@@ -11,7 +11,11 @@ export const metadata: Metadata = {
     "Signals — transmissions from inside the studio. Irregular, honest, occasionally classified.",
 };
 
-export default function SignalsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SignalsPage() {
+  const entries = await listPublished("signal");
+
   return (
     <>
       {/* ============================ HEADER =========================== */}
@@ -28,7 +32,7 @@ export default function SignalsPage() {
       <section className="bg-paper">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 pt-14 pb-10 md:px-10">
           <Reveal>
-            <PixelTag>Archive — {SIGNALS.length} entries</PixelTag>
+            <PixelTag>Archive — {entries.length} entries</PixelTag>
           </Reveal>
           <Reveal delay={0.1}>
             <div className="flex gap-3">
@@ -38,9 +42,9 @@ export default function SignalsPage() {
           </Reveal>
         </div>
         <div className="border-b border-ink/10">
-          {SIGNALS.map((signal, i) => (
-            <Reveal key={signal.id} delay={i * 0.08} y={24}>
-              <SignalRow signal={signal} showExcerpt />
+          {entries.map((entry, i) => (
+            <Reveal key={entry.id} delay={i * 0.08} y={24}>
+              <EntryRow entry={entry} />
             </Reveal>
           ))}
         </div>

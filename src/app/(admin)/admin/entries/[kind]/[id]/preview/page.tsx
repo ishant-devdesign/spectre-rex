@@ -2,11 +2,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getEntry, type EntryKind } from "../../../actions";
-import { BlockRenderer } from "@/components/content/BlockRenderer";
+import { EntryArticle } from "@/components/content/EntryArticle";
+import { toPublicEntry } from "@/lib/entries";
 
 export const dynamic = "force-dynamic";
 
-/** Renders the entry with the same component the public site uses. */
+/**
+ * Preview renders the exact component the public detail page renders, fed
+ * through the exact redaction the public read layer applies.
+ *
+ * Previously this was a separate 760px article layout, so an author was
+ * shown something no reader would ever see. Two consequences of doing it
+ * properly: a classified entry previews as scrambled, because that is what
+ * the public gets; and a draft previews as it will look once published,
+ * because status affects visibility rather than rendering.
+ */
 export default async function PreviewPage({
   params,
 }: {
@@ -17,40 +27,40 @@ export default async function PreviewPage({
   const entry = await getEntry(kind as EntryKind, id).catch(() => null);
   if (!entry) notFound();
 
+  const preview = toPublicEntry({
+    id: entry.id,
+    kind: entry.kind,
+    code: entry.code,
+    slug: entry.slug,
+    title: entry.title,
+    subtitle: entry.subtitle,
+    summary: entry.summary,
+    heroImage: entry.heroImage || null,
+    blocks: entry.blocks,
+    classified: entry.classified,
+    dateLabel: "",
+    updatedAt: entry.updatedAt,
+  });
+
   return (
-    <div className="min-h-svh bg-paper text-ink">
-      <div className="border-b border-ink/10 bg-night px-5 py-3 md:px-10">
+    <div className="min-h-svh bg-paper">
+      <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-paper/12 bg-night px-5 py-3 md:px-10">
         <Link
           href={`/admin/entries/${entry.kind}/${entry.id}`}
           className="inline-flex items-center gap-2 font-pixel text-[10px] tracking-[0.28em] text-paper/60 uppercase transition-colors hover:text-spectre"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to editor — previewing {entry.status}
+          Back to editor
         </Link>
+        <span className="font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase">
+          {entry.status}
+          {entry.classified ? " · classified · slug returns 404" : ""}
+        </span>
       </div>
 
-      <article className="mx-auto max-w-[760px] px-5 py-16 md:py-24">
-        <p className="font-pixel text-[10px] tracking-[0.3em] text-ink/45 uppercase">
-          {entry.kind} {entry.code}
-        </p>
-        <h1 className="mt-5 font-display text-[2.6rem] leading-[1.02] font-extrabold tracking-[-0.035em] md:text-[3.4rem]">
-          {entry.title}
-        </h1>
-        {entry.subtitle ? (
-          <p className="mt-4 font-display text-[1.3rem] leading-snug font-semibold text-ink/60">
-            {entry.subtitle}
-          </p>
-        ) : null}
-        {entry.summary ? (
-          <p className="mt-6 text-[17px] leading-relaxed text-ink/70">
-            {entry.summary}
-          </p>
-        ) : null}
-
-        <div className="mt-12">
-          <BlockRenderer blocks={entry.blocks} />
-        </div>
-      </article>
+      {/* chrome={false} drops the site back-link and prev/next, which would
+          navigate out of the admin frame into the public site. */}
+      <EntryArticle entry={preview} chrome={false} />
     </div>
   );
 }

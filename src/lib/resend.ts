@@ -109,8 +109,13 @@ const escapeHtml = (value: string): string =>
  * already reached the team, and turning a delivered message into a visible
  * error because a courtesy receipt bounced would be the wrong trade.
  *
- * Reply-To points at the studio group so a reply to the acknowledgement
- * reaches a human rather than the unattended sending address.
+ * No Reply-To. Everything the site sends is one-way: the acknowledgement
+ * already links to the site, and anyone wanting a conversation has the
+ * form and the published addresses. Adding a reply path to an automated
+ * receipt only creates a second, unmonitored way in.
+ *
+ * The one exception is the message relayed *to* the studio, which carries
+ * the visitor in Reply-To -- that is how the team answers them.
  */
 export async function sendContactAck(to: string): Promise<SendResult> {
   if (!resendConfigured()) {
@@ -119,7 +124,6 @@ export async function sendContactAck(to: string): Promise<SendResult> {
   const { ok, json } = await call("/emails", {
     from: FROM,
     to: [to],
-    reply_to: CONTACT_TO,
     subject: CONTACT_ACK_SUBJECT,
     html: contactAckHtml(),
     text: CONTACT_ACK_TEXT,

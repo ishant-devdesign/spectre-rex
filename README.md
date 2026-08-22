@@ -299,14 +299,18 @@ env var.
 Note the asymmetry, which is easy to get wrong: `POST /contacts` takes no
 audience at all, `POST /broadcasts` requires one.
 
-Campaigns carry **no Reply-To**. They are one-way by decision: replies reach
-the unattended sending address and go nowhere. The consequence is that the
-unsubscribe link is the reader's only exit, so it stays prominent in the
-footer rather than shrinking to a legal formality.
+**Everything the site sends outward is one-way.** Campaigns and the contact
+acknowledgement carry no Reply-To, so replies reach the unattended sending
+address and go nowhere. Anyone wanting a conversation has the form and the
+published group addresses; an automated receipt does not need to be a second,
+unmonitored way in.
 
-The contact form is the opposite and deliberately so -- the message relayed
-to the studio carries the visitor in Reply-To, which is how the team answers
-them.
+Two consequences worth keeping in mind. The unsubscribe link is a campaign
+reader's only exit, so it stays prominent in the footer rather than shrinking
+to a legal formality -- someone who cannot leave clicks Spam instead, and the
+bulk-sender threshold is 0.3%. And the one place Reply-To *is* set is the
+message relayed **to** the studio, which carries the visitor's address; that
+is how the team answers an enquiry, and removing it would break the form.
 
 **Publishing an entry drafts its campaign automatically.** The first time an
 entry moves from draft to published, `saveEntry` renders the teaser and

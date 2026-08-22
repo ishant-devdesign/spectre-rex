@@ -32,11 +32,27 @@ const CONTACT_TO = process.env.CONTACT_TO ?? "hello@spectrerex.com";
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
+/**
+ * Key used for reads.
+ *
+ * Resend has exactly two permission levels: sending access, and full
+ * access. There is no read-only tier, so listing broadcasts requires a
+ * full-access key -- a sending key answers "This API key is restricted to
+ * only send emails" no matter what is requested.
+ *
+ * RESEND_ADMIN_API_KEY exists so the hot path (the contact form, signups)
+ * can keep a narrow sending key while the admin-only campaigns list uses a
+ * broader one. It falls back to RESEND_API_KEY, so a single full-access key
+ * also works.
+ */
+const readKey = (): string | undefined =>
+  process.env.RESEND_ADMIN_API_KEY || process.env.RESEND_API_KEY;
+
 async function get(
   path: string,
 ): Promise<{ ok: boolean; json: Record<string, unknown> }> {
   const response = await fetch(`${API}${path}`, {
-    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+    headers: { authorization: `Bearer ${readKey()}` },
     /* Campaign state changes outside this app, so a cached response would
        show a campaign as unsent after it had gone out. */
     cache: "no-store",
@@ -150,12 +166,13 @@ export async function sendContactEmail(
  * Resend moved contacts to the account level: the endpoint is POST
  * /contacts with no audience in the path. The older
  * /audiences/{id}/contacts shape this used to call is gone, which failed
- * silently here -- the sync is deliberately non-fatal, so a 404 from Resend
+ * silently -- the sync is deliberately non-fatal, so a 404 from Resend
  * looked identical to a successful signup from the visitor's side.
  *
- * RESEND_SEGMENT_ID is optional. Without it the contact lands in the
- * default list, which is all a single-newsletter studio needs; set it to
- * file signups into a specific segment later.
+ * No segment is passed. Contacts land in the single account-level list,
+ * which is the right shape for one newsletter; segments only earn their
+ * keep once the list needs splitting, and an unused parameter here would be
+ * a config knob nobody sets and everybody has to reason about.
  *
  * Still non-fatal by design: Postgres is the record of who subscribed and
  * Resend is a cache of it, so an outage there must not turn a successful
@@ -166,17 +183,15 @@ export async function addContact(email: string): Promise<SendResult> {
     return { ok: false, error: "Contact sync is not configured." };
   }
 
-  const segmentId = process.env.RESEND_SEGMENT_ID;
-  const { ok, json } = await call("/contacts", {
-    email,
-    unsubscribed: false,
-    ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
-  });
+  const { ok, json } = await call("/contacts", { email, unsubscribed: false });
 
   return ok
     ? { ok: true }
     : { ok: false, error: errorFrom(json, "Resend rejected the contact.") };
 }
+
+/** Sentinel for "the key works, but is not allowed to read". */
+export const RESTRICTED = "restricted-key";
 
 export interface Broadcast {
   id: string;
@@ -200,16 +215,18 @@ export async function listBroadcasts(): Promise<{
   broadcasts: Broadcast[];
   error: string | null;
 }> {
-  if (!resendConfigured()) {
+  if (!readKey()) {
     return { broadcasts: [], error: "RESEND_API_KEY is not set." };
   }
   try {
     const { ok, json } = await get("/broadcasts");
     if (!ok) {
-      return {
-        broadcasts: [],
-        error: errorFrom(json, "Resend rejected the request."),
-      };
+      const message = errorFrom(json, "Resend rejected the request.");
+      /* Distinguish the one failure that is a configuration choice rather
+         than a fault, so the page can explain it instead of showing a raw
+         API string that reads like a bug. */
+      const restricted = /restricted|only send/i.test(message);
+      return { broadcasts: [], error: restricted ? RESTRICTED : message };
     }
     const raw = Array.isArray(json.data) ? (json.data as Broadcast[]) : [];
     const rank = (b: Broadcast) =>

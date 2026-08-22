@@ -1,6 +1,6 @@
 import { ArrowUpRight, Megaphone, Send } from "lucide-react";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { listBroadcasts, resendConfigured } from "@/lib/resend";
+import { listBroadcasts, RESTRICTED, resendConfigured } from "@/lib/resend";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +74,25 @@ export default async function AdminCampaignsPage() {
           <code className="text-paper/70">RESEND_API_KEY</code> is not set, so
           campaigns cannot be listed. Sending is disabled too.
         </p>
+      ) : error === RESTRICTED ? (
+        <div className="mt-8 border border-paper/12 bg-white/[0.02] px-6 py-10">
+          <p className="font-pixel text-[10px] tracking-[0.28em] text-paper/45 uppercase">
+            Sending-only key
+          </p>
+          <p className="mt-4 max-w-[70ch] text-[15px] leading-relaxed text-paper/65">
+            Your API key can send email but not read account data, so
+            campaigns cannot be listed. Resend has no read-only permission --
+            listing requires full access. Either raise this key to full
+            access, or create a second full-access key and set it as{" "}
+            <code className="text-paper/85">RESEND_ADMIN_API_KEY</code>,
+            leaving the sending key on the public paths.
+          </p>
+          <p className="mt-3 max-w-[70ch] text-[13.5px] leading-relaxed text-paper/40">
+            Nothing is broken either way -- the contact form and signups use
+            the sending key and are unaffected. This tab is the only thing
+            that needs the wider permission.
+          </p>
+        </div>
       ) : error ? (
         <p className="mt-8 border border-spectre/40 bg-spectre/10 px-5 py-4 text-[14px] text-paper/80">
           Could not reach Resend: {error}

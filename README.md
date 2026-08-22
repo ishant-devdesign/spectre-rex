@@ -53,9 +53,9 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | for `/admin` | Supabase anon (publishable) key |
 | `ADMIN_EMAILS` | for `/admin` | Comma-separated allowlist |
 | `RESEND_API_KEY` | for outbound mail | Contact form relay and audience sync |
-| `RESEND_SEGMENT_ID` | no | Optional segment for signups; contacts are account-level |
 | `RESEND_FROM` | no | Defaults to `Spectre Rex <no-reply@send.spectrerex.com>` |
 | `CONTACT_TO` | no | Defaults to `hello@spectrerex.com` |
+| `RESEND_ADMIN_API_KEY` | no | Full-access key, only for the campaigns list |
 
 `NEXT_PUBLIC_SUPABASE_URL` is also read at **build** time, by `next.config.ts`, to allowlist the
 Storage host for `next/image`. Set it in Vercel before the first deploy or uploaded images fail to
@@ -366,7 +366,9 @@ damage is contained to the subdomain and the team's day-to-day mail is untouched
 2. Add the **DKIM and SPF records** Resend shows you, plus a **DMARC** record.
    Since February 2024 Gmail and Yahoo require all three from bulk senders -- this
    is an entry requirement, not a best practice.
-4. Set `RESEND_API_KEY` in `.env.local` and Vercel. Contacts are account-level in Resend's current API, so no audience id is required.
+4. Set `RESEND_API_KEY` in `.env.local` and Vercel. Contacts are account-level
+   in Resend's current API -- `POST /contacts` takes neither an audience nor a
+   segment id, so there is nothing else to configure.
 
 Campaigns are composed in `/admin`, not by emailing an address. The admin panel
 already has an authenticated 12-block editor and a preview route, so a compose

@@ -58,7 +58,7 @@ function inline(text: string): string {
     )
     .replace(
       /&lt;code&gt;(.*?)&lt;\/code&gt;/gi,
-      `<span style="font-family:${MONO};font-size:14px;background:rgba(36,36,36,0.07);padding:1px 5px">$1</span>`,
+      `<span style="font-family:${MONO};font-size:14px;background:#e4e2dc;padding:1px 5px">$1</span>`,
     )
     .replace(
       /&lt;reveal&gt;(.*?)&lt;\/reveal&gt;/gi,
@@ -82,12 +82,12 @@ function blockHtml(block: Block, siteUrl: string): string {
     case "paragraph": {
       const size = { sm: 14, base: 16, lg: 18, lead: 21 }[block.size ?? "base"];
       return row(
-        `<p style="margin:0;font-family:${SANS};font-size:${size}px;line-height:1.65;color:rgba(36,36,36,0.82)">${inline(block.text)}</p>`,
+        `<p style="margin:0;font-family:${SANS};font-size:${size}px;line-height:1.65;color:#494948">${inline(block.text)}</p>`,
       );
     }
     case "list":
       return row(
-        `<ul style="margin:0;padding-left:20px;font-family:${SANS};font-size:16px;line-height:1.7;color:rgba(36,36,36,0.82)">${block.items
+        `<ul style="margin:0;padding-left:20px;font-family:${SANS};font-size:16px;line-height:1.7;color:#494948">${block.items
           .map((item) => `<li>${inline(item)}</li>`)
           .join("")}</ul>`,
       );
@@ -97,12 +97,12 @@ function blockHtml(block: Block, siteUrl: string): string {
            <td width="3" style="background:${SPECTRE}"></td>
            <td style="padding-left:18px;font-family:${SANS};font-size:19px;line-height:1.45;font-weight:600;color:${INK}">
              &ldquo;${inline(block.text)}&rdquo;
-             ${block.attribution ? `<div style="margin-top:10px;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(36,36,36,0.45)">&mdash; ${esc(block.attribution)}</div>` : ""}
+             ${block.attribution ? `<div style="margin-top:10px;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#959491">&mdash; ${esc(block.attribution)}</div>` : ""}
            </td></tr></table>`,
       );
     case "code":
       return row(
-        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid rgba(36,36,36,0.12)"><tr>
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #d9d8d2"><tr>
            <td style="padding:16px 18px;font-family:${MONO};font-size:13px;line-height:1.6;color:${INK};white-space:pre-wrap">${esc(block.text)}</td>
          </tr></table>`,
       );
@@ -110,7 +110,7 @@ function blockHtml(block: Block, siteUrl: string): string {
       return block.src
         ? row(
             `<img src="${esc(absolute(block.src, siteUrl))}" alt="${esc(block.alt)}" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0" />
-             ${block.caption ? `<div style="margin-top:8px;font-family:${SANS};font-size:12px;color:rgba(36,36,36,0.5)">${esc(block.caption)}</div>` : ""}`,
+             ${block.caption ? `<div style="margin-top:8px;font-family:${SANS};font-size:12px;color:#8b8a87">${esc(block.caption)}</div>` : ""}`,
           )
         : "";
     case "imageGroup":
@@ -134,11 +134,11 @@ function blockHtml(block: Block, siteUrl: string): string {
         : "";
     case "classified":
       return row(
-        `<p style="margin:0;font-family:${SANS};font-size:16px;color:rgba(36,36,36,0.82)">${esc(block.text)} <span style="background:${INK};color:${INK}">${"\u2588".repeat(Math.max(3, block.blocks))}</span></p>`,
+        `<p style="margin:0;font-family:${SANS};font-size:16px;color:#494948">${esc(block.text)} <span style="background:${INK};color:${INK}">${"\u2588".repeat(Math.max(3, block.blocks))}</span></p>`,
       );
     case "reveal":
       return row(
-        `<p style="margin:0;font-family:${SANS};font-size:16px;color:rgba(36,36,36,0.82)">${esc(block.label)}: <span style="background:${INK};color:${INK}">${esc(block.text)}</span></p>`,
+        `<p style="margin:0;font-family:${SANS};font-size:16px;color:#494948">${esc(block.label)}: <span style="background:${INK};color:${INK}">${esc(block.text)}</span></p>`,
       );
     default:
       return "";
@@ -184,9 +184,9 @@ export function renderEntryEmail(
            all strip or fail to render SVG in email. -->
       <img src="${siteUrl}/assets/email/logo-paper.png" alt="Spectre Rex" width="180" height="45"
            style="display:block;width:180px;height:auto;border:0;outline:none;text-decoration:none" />
-      <div style="font-family:${MONO};font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(242,240,234,0.45);padding-top:20px">${label} ${esc(entry.code)}${entry.dateLabel ? ` &middot; ${esc(entry.dateLabel)}` : ""}</div>
+      <div style="font-family:${MONO};font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#737574;padding-top:20px">${label} ${esc(entry.code)}${entry.dateLabel ? ` &middot; ${esc(entry.dateLabel)}` : ""}</div>
       <h1 style="margin:12px 0 0;font-family:${SANS};font-size:32px;line-height:1.08;font-weight:800;letter-spacing:-0.03em;color:${PAPER}">${esc(entry.title)}</h1>
-      ${entry.subtitle ? `<p style="margin:14px 0 0;font-family:${SANS};font-size:17px;line-height:1.4;font-weight:600;color:rgba(242,240,234,0.62)">${esc(entry.subtitle)}</p>` : ""}
+      ${entry.subtitle ? `<p style="margin:14px 0 0;font-family:${SANS};font-size:17px;line-height:1.4;font-weight:600;color:#9a9b99">${esc(entry.subtitle)}</p>` : ""}
     </td></tr>
 
     ${
@@ -200,7 +200,7 @@ export function renderEntryEmail(
         ? `<tr><td style="padding:32px 32px 4px">
              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
                <td width="3" style="background:${SPECTRE}"></td>
-               <td style="padding-left:18px;font-family:${SANS};font-size:19px;line-height:1.55;color:rgba(36,36,36,0.85)">${esc(entry.summary)}</td>
+               <td style="padding-left:18px;font-family:${SANS};font-size:19px;line-height:1.55;color:#434342">${esc(entry.summary)}</td>
              </tr></table>
            </td></tr>`
         : ""
@@ -215,12 +215,12 @@ export function renderEntryEmail(
 
     <tr><td style="background:${NIGHT};padding:26px 32px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-        <td style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(242,240,234,0.4)">End of transmission</td>
-        <td align="right" style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(242,240,234,0.3)">${entry.kind === "signal" ? "SIG" : "PRJ"} ${esc(entry.code)}</td>
+        <td style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#676a6a">End of transmission</td>
+        <td align="right" style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#505354">${entry.kind === "signal" ? "SIG" : "PRJ"} ${esc(entry.code)}</td>
       </tr></table>
-      <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:rgba(242,240,234,0.38);padding-top:18px">
+      <div style="font-family:${SANS};font-size:12px;line-height:1.6;color:#636565;padding-top:18px">
         Spectre Rex Studios &middot; Gurugram, India<br />
-        <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:rgba(242,240,234,0.55);text-decoration:underline">Unsubscribe</a>
+        <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#8a8b8a;text-decoration:underline">Unsubscribe</a>
       </div>
     </td></tr>
 

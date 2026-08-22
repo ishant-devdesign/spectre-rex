@@ -62,5 +62,9 @@ export async function POST(request: Request) {
   const synced = await addContact(email);
   if (!synced.ok) console.warn("[subscribe] contact sync:", synced.error);
 
-  return Response.json({ ok: true });
+  /* `synced` is reported so a failed sync is visible without server log
+     access -- this failed silently once already, and "row in Postgres, no
+     contact in Resend" is invisible from the outside otherwise. It is not
+     an error field: the signup itself succeeded either way. */
+  return Response.json({ ok: true, synced: synced.ok });
 }

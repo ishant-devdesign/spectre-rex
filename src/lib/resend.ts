@@ -39,26 +39,28 @@ const CONTACT_TO = process.env.CONTACT_TO ?? "hello@spectrerex.com";
 type SendResult = { ok: true } | { ok: false; error: string };
 
 /**
- * Key used for reads.
+ * Key for anything that is not sending an email.
  *
  * Resend has exactly two permission levels: sending access, and full
- * access. There is no read-only tier, so listing broadcasts requires a
- * full-access key -- a sending key answers "This API key is restricted to
- * only send emails" no matter what is requested.
+ * access. A sending key answers "This API key is restricted to only send
+ * emails" for every other operation -- and **creating a contact counts as
+ * another operation**, not as sending. That is subtle enough to have cost a
+ * bug: signups wrote to Postgres, the Resend call was rejected, and because
+ * the sync is intentionally non-fatal the visitor saw success while the
+ * contact never appeared.
  *
- * RESEND_ADMIN_API_KEY exists so the hot path (the contact form, signups)
- * can keep a narrow sending key while the admin-only campaigns list uses a
- * broader one. It falls back to RESEND_API_KEY, so a single full-access key
- * also works.
+ * So this covers both reads (listing broadcasts) and contact writes. It
+ * falls back to RESEND_API_KEY, which is correct when that key is itself
+ * full access.
  */
-const readKey = (): string | undefined =>
+const manageKey = (): string | undefined =>
   process.env.RESEND_ADMIN_API_KEY || process.env.RESEND_API_KEY;
 
 async function get(
   path: string,
 ): Promise<{ ok: boolean; json: Record<string, unknown> }> {
   const response = await fetch(`${API}${path}`, {
-    headers: { authorization: `Bearer ${readKey()}` },
+    headers: { authorization: `Bearer ${manageKey()}` },
     /* Campaign state changes outside this app, so a cached response would
        show a campaign as unsent after it had gone out. */
     cache: "no-store",
@@ -73,11 +75,12 @@ async function get(
 async function call(
   path: string,
   body: unknown,
+  key: string | undefined = process.env.RESEND_API_KEY,
 ): Promise<{ ok: boolean; status: number; json: Record<string, unknown> }> {
   const response = await fetch(`${API}${path}`, {
     method: "POST",
     headers: {
-      authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      authorization: `Bearer ${key}`,
       "content-type": "application/json",
     },
     body: JSON.stringify(body),
@@ -215,15 +218,23 @@ export async function sendContactEmail(
  * signup into a visible error.
  */
 export async function addContact(email: string): Promise<SendResult> {
-  if (!resendConfigured()) {
-    return { ok: false, error: "Contact sync is not configured." };
-  }
+  const key = manageKey();
+  if (!key) return { ok: false, error: "Contact sync is not configured." };
 
-  const { ok, json } = await call("/contacts", { email, unsubscribed: false });
+  const { ok, json } = await call(
+    "/contacts",
+    { email, unsubscribed: false },
+    key,
+  );
 
-  return ok
-    ? { ok: true }
-    : { ok: false, error: errorFrom(json, "Resend rejected the contact.") };
+  if (ok) return { ok: true };
+  const message = errorFrom(json, "Resend rejected the contact.");
+  return {
+    ok: false,
+    error: /restricted|only send/i.test(message)
+      ? "Sending-only API key cannot create contacts. Set RESEND_ADMIN_API_KEY to a full-access key."
+      : message,
+  };
 }
 
 /** Sentinel for "the key works, but is not allowed to read". */
@@ -251,7 +262,7 @@ export async function listBroadcasts(): Promise<{
   broadcasts: Broadcast[];
   error: string | null;
 }> {
-  if (!readKey()) {
+  if (!manageKey()) {
     return { broadcasts: [], error: "RESEND_API_KEY is not set." };
   }
   try {

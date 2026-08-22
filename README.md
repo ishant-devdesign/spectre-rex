@@ -55,6 +55,7 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `RESEND_API_KEY` | for outbound mail | Contact form relay and audience sync |
 | `RESEND_FROM` | no | Defaults to `Spectre Rex <no-reply@send.spectrerex.com>` |
 | `CONTACT_TO` | no | Defaults to `hello@spectrerex.com` |
+| `RESEND_AUDIENCE_ID` | when >1 audience | Required once the account has more than one; discovered otherwise |
 | `RESEND_ADMIN_API_KEY` | for campaigns | Full-access key: listing broadcasts, creating contacts and drafting campaigns all need it. A sending key cannot do any of them. |
 
 `NEXT_PUBLIC_SUPABASE_URL` is also read at **build** time, by `next.config.ts`, to allowlist the
@@ -266,6 +267,28 @@ opt-in can be switched on later without a migration.
 already provides an editor, test sends, scheduling and open/click stats;
 rebuilding that inside the panel would be the most expensive piece of the
 whole system and worse than what it replaced.
+
+Broadcasts require an audience. Resend's create-broadcast reference lists
+only `from` and `subject` as required, but the API answers `Missing either
+segment_id or audience_id field` without one -- the documentation is
+incomplete.
+
+The id resolves in three steps:
+
+| Situation | Behaviour |
+|---|---|
+| `RESEND_AUDIENCE_ID` set | use it |
+| Exactly one audience | use it, no configuration |
+| Several audiences | **refuse**, and name them with their ids |
+
+The third row is the important one. Taking the first would work today and
+break silently the day a second list is added -- audience order is not
+guaranteed, and a devlog sent to the wrong list cannot be recalled. The
+error names each audience so the right id can be copied straight into the
+env var.
+
+Note the asymmetry, which is easy to get wrong: `POST /contacts` takes no
+audience at all, `POST /broadcasts` requires one.
 
 **Publishing an entry drafts its campaign automatically.** The first time an
 entry moves from draft to published, `saveEntry` renders the teaser and

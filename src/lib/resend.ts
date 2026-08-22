@@ -238,6 +238,77 @@ export async function addContact(email: string): Promise<SendResult> {
 }
 
 /**
+ * The audience a broadcast is sent to.
+ *
+ * Resend's create-broadcast reference lists only `from` and `subject` as
+ * required, but the API rejects a payload without `audience_id` or
+ * `segment_id` -- the documentation is incomplete, and this was found the
+ * hard way.
+ *
+ * Resolution is deliberately strict:
+ *
+ *   RESEND_AUDIENCE_ID set   -> use it
+ *   exactly one audience     -> use it, no configuration needed
+ *   several audiences        -> refuse, and name them
+ *
+ * The last case is the point. Silently taking the first would work today
+ * and quietly break the day a second list is added: audience order is not
+ * guaranteed, and sending a devlog to the wrong list cannot be undone.
+ * Refusing costs one env var; guessing costs an apology to a mailing list.
+ *
+ * Memoised per server instance, since the id does not change.
+ */
+let cachedAudienceId: string | null = null;
+
+type AudienceLookup =
+  | { ok: true; id: string }
+  | { ok: false; error: string };
+
+async function resolveAudienceId(): Promise<AudienceLookup> {
+  const configured = process.env.RESEND_AUDIENCE_ID?.trim();
+  if (configured) return { ok: true, id: configured };
+  if (cachedAudienceId) return { ok: true, id: cachedAudienceId };
+
+  const { ok, json } = await get("/audiences");
+  if (!ok) {
+    return {
+      ok: false,
+      error: errorFrom(json, "Could not list Resend audiences."),
+    };
+  }
+
+  const list = (Array.isArray(json.data) ? json.data : []) as {
+    id?: unknown;
+    name?: unknown;
+  }[];
+  const audiences = list.filter(
+    (a): a is { id: string; name: string } => typeof a.id === "string",
+  );
+
+  if (audiences.length === 0) {
+    return {
+      ok: false,
+      error: "No Resend audience exists. Create one in Resend first.",
+    };
+  }
+
+  if (audiences.length > 1) {
+    const named = audiences
+      .map((a) => `${a.name ?? "unnamed"} (${a.id})`)
+      .join(", ");
+    return {
+      ok: false,
+      error:
+        `This account has ${audiences.length} audiences, so the target is ` +
+        `ambiguous. Set RESEND_AUDIENCE_ID to one of: ${named}`,
+    };
+  }
+
+  cachedAudienceId = audiences[0].id;
+  return { ok: true, id: cachedAudienceId };
+}
+
+/**
  * Creates a broadcast in Resend as a DRAFT.
  *
  * `send` is deliberately never set. Publishing is not the same decision as
@@ -258,9 +329,13 @@ export async function createBroadcastDraft(input: {
   const key = manageKey();
   if (!key) return { ok: false, error: "Resend is not configured." };
 
+  const audience = await resolveAudienceId();
+  if (!audience.ok) return { ok: false, error: audience.error };
+
   const { ok, json } = await call(
     "/broadcasts",
     {
+      audience_id: audience.id,
       from: FROM,
       reply_to: CONTACT_TO,
       name: input.name,

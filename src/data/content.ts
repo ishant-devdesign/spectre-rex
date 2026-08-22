@@ -181,8 +181,23 @@ export const IDENTITY = [
   { index: "04", label: "Specimen", value: "One dragon", note: "Pixel, winged" },
 ] as const;
 
+/**
+ * Public contact channels.
+ *
+ * Every address here is a Zoho *group*, not an alias, so membership can change
+ * without touching this file. Two addresses are deliberately absent:
+ *
+ *   team@      internal all-hands. Publishing it would put cold pitches in
+ *              every inbox and put one Reply All between an internal thread
+ *              and an outsider.
+ *   send.*     the Resend subdomain campaigns go out from. Nobody replies to
+ *              it; replies are pointed back at hello@.
+ *
+ * The footer renders this same array, so a change here propagates.
+ */
 export const CONTACTS = [
   { label: "GENERAL", email: "hello@spectrerex.com", note: "Say hi. Pitch. Propose chaos." },
+  { label: "SUPPORT", email: "support@spectrerex.com", note: "Something broken? Start here." },
   { label: "PRESS", email: "press@spectrerex.com", note: "Media, interviews and kits." },
   { label: "BUSINESS", email: "work@spectrerex.com", note: "Work with the studio." },
 ] as const;

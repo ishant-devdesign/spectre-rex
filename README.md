@@ -12,8 +12,8 @@ Supabase (Postgres + Auth), deployed on Vercel
 - [Quick start](#quick-start)
 - [Environment variables](#environment-variables)
 - [1. Supabase](#1-supabase)
-- [2. Zoho Mail](#2-zoho-mail)
-- [3. Sending auth email](#3-sending-auth-email)
+- [2. Email architecture](#2-email-architecture)
+- [3. Admin magic links](#3-admin-magic-links)
 - [4. Vercel](#4-vercel)
 - [Admin panel](#admin-panel)
 - [Project structure](#project-structure)
@@ -52,6 +52,8 @@ There is no `.env.example` in the repo -- this table is the reference. Create
 | `NEXT_PUBLIC_SUPABASE_URL` | for `/admin` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | for `/admin` | Supabase anon (publishable) key |
 | `ADMIN_EMAILS` | for `/admin` | Comma-separated allowlist |
+| `RESEND_API_KEY` | for subscribers | Not wired up yet -- see section 2.3 |
+| `RESEND_AUDIENCE_ID` | for subscribers | Not wired up yet -- see section 2.3 |
 
 `NEXT_PUBLIC_SUPABASE_URL` is also read at **build** time, by `next.config.ts`, to allowlist the
 Storage host for `next/image`. Set it in Vercel before the first deploy or uploaded images fail to
@@ -61,6 +63,25 @@ There is deliberately **no** `SUPABASE_SERVICE_ROLE_KEY`. Nothing in the codebas
 code writes through `DATABASE_URL` and uploads go straight from the browser to Storage as the
 signed-in user. A service-role key bypasses every row level security policy, so it is not worth
 carrying for no gain.
+
+### Why both Supabase keys and a DATABASE_URL?
+
+They are two different protocols into the same Postgres, not a duplicate.
+`@supabase/supabase-js` talks HTTPS to PostgREST and is used **only for auth** --
+login, sessions, and storage uploads. Everything else (`signals`, `projects`,
+`contact_messages`) goes over the Postgres wire protocol through `pg` and Drizzle.
+
+The reason matters: the admin panel has to read drafts and write content. Over
+PostgREST that requires `SUPABASE_SERVICE_ROLE_KEY`, which bypasses every RLS
+policy on every table and is catastrophic if leaked. With `DATABASE_URL` the
+Postgres role owns the tables and bypasses RLS as a consequence of ownership, so
+no such key needs to exist. Type safety is the secondary benefit -- `db/schema.ts`
+is checked by `tsc`, whereas generated PostgREST types drift silently.
+
+Of the three database variables, only `DATABASE_URL` is required.
+`DIRECT_DATABASE_URL` is for `drizzle-kit` migrations, which are unnecessary if
+`schema.sql` is run by hand in the SQL Editor. `DATABASE_POOL_MAX` defaults to
+`3` in code.
 
 Use the **pooler** string on Vercel. Every serverless invocation opens its own pool and the direct
 5432 connection runs out of Postgres slots quickly. Migrations are the exception -- `drizzle-kit`
@@ -144,50 +165,123 @@ has to be set at **build** time on Vercel, not just at runtime.
 
 ---
 
-## 2. Zoho Mail
+## 2. Email architecture
 
-Zoho handles **receiving** mail for the domain.
+Three systems, each doing one job. Step-by-step DNS and console instructions are
+in [MAIL-SETUP.md](MAIL-SETUP.md); this section is the reasoning.
+ Nothing here blocks a deploy -- the site runs
+without any of it -- but this is the target shape.
 
-1. Sign up for the [Zoho Mail Forever Free plan](https://www.zoho.com/mail/zohomail-pricing.html)
-   (on the Zoho Workplace pricing page -- scroll to "Forever Free").
-2. Add the domain `spectrerex.com` and verify it.
-3. Create the user `ishant@spectrerex.com`.
-4. Add `admin@` and `support@` as **aliases** on that account rather than separate users -- aliases
-   are unlimited and do not consume one of the five free mailboxes.
-5. Point the domain's **MX records** at Zoho as instructed during setup.
+| Job | System | Cost |
+|---|---|---|
+| Team mailboxes, inbound role addresses | Zoho Mail Forever Free | 0 |
+| `support@` tickets, assigned by HR | Zoho Desk Free | 0 |
+| Subscriber campaigns, transactional | Resend | 0 to 1,000 contacts |
+| Admin magic links | Supabase built-in -> Gmail | 0 |
 
-**Free plan limits:** webmail and the Zoho apps only. IMAP, POP, SMTP, email forwarding and
-ActiveSync are paid-only, which matters for the next section.
+### 2.1 Zoho Mail -- mailboxes and groups
+
+1. Sign up for the [Forever Free plan](https://www.zoho.com/mail/zohomail-pricing.html)
+   (Zoho Workplace pricing page, scroll to "Forever Free"). Cap: **5 users**, one
+   domain, webmail and mobile app only.
+2. Add `spectrerex.com` and verify it. Point the domain's **MX records** at Zoho.
+3. Create one **user** per team member. Four people = four of the five seats.
+4. Create the role addresses as **groups**, not aliases:
+   **Admin Console -> Groups -> Create Group**.
+
+| Group | Members | Published? |
+|---|---|---|
+| `hello@` | founders | yes -- site-wide, and the campaign From address |
+| `support@` | HR (feeds Zoho Desk) | yes |
+| `press@` | founders | yes |
+| `work@` | founders | yes |
+| `team@` | everyone | **no -- internal only** |
+
+Groups, not aliases, for all five. An alias points at exactly one mailbox; a
+group has a membership list you edit later. Onboarding becomes "add to two
+groups" and offboarding becomes "remove from three", instead of hunting through
+per-user alias config. Free allows 30 groups and they do **not** consume user
+seats. Aliases still exist for one-human cases at
+**Users -> [user] -> Mail Settings -> Email Alias** (30 per mailbox).
+
+`team@` must never appear on the website. A published internal address means
+cold pitches land in every inbox, and puts one Reply All between an internal
+thread and an outsider.
+
+**Free plan limits that will eventually bite:** no IMAP/POP/SMTP, no email
+forwarding, 5 users. The sixth hire forces every seat onto Mail Lite
+(~INR 59/user/month).
+
+### 2.2 Zoho Desk -- support tickets
+
+"HR assigns the ticket, the assignee replies privately" is a helpdesk, not a
+shared inbox. A shared inbox has no ownership, no status, and lets two people
+reply at once.
+
+1. Create a [Zoho Desk](https://www.zoho.com/desk/) account -- **Free plan, 3
+   agents, no time limit**, email ticketing included.
+2. Add `support@spectrerex.com` as the support channel and follow the forwarding
+   or MX instructions Desk gives you.
+3. HR triages and assigns; the assignee replies from inside the ticket.
+
+Free has no automation and caps at 3 agents. Express is ~USD 7/agent/month after
+that.
+
+### 2.3 Resend -- subscribers and campaigns
+
+**Use a subdomain.** Verify `send.spectrerex.com` in Resend, not the root domain.
+Zoho keeps the root MX for inbound. If a campaign ever gets spam-flagged, the
+damage is contained to the subdomain and the team's day-to-day mail is untouched.
+
+1. Create a [Resend](https://resend.com) account and add the domain
+   `send.spectrerex.com`.
+2. Add the **DKIM and SPF records** Resend shows you, plus a **DMARC** record.
+   Since February 2024 Gmail and Yahoo require all three from bulk senders -- this
+   is an entry requirement, not a best practice.
+3. Create an **audience** for subscribers.
+4. Set `RESEND_API_KEY` and `RESEND_AUDIENCE_ID` in `.env.local` and Vercel.
+
+Campaigns are composed in `/admin`, not by emailing an address. The admin panel
+already has an authenticated 12-block editor and a preview route, so a compose
+page gives preview, test send, recipient count and a draft state. An
+email-to-broadcast trigger has none of that, and anyone who spoofs the From
+header could reach the whole list.
+
+Resend injects `{{{RESEND_UNSUBSCRIBE_URL}}}` into broadcasts, so one-click
+unsubscribe -- also mandatory under the same bulk-sender rules -- is handled.
+
+**Signup is single opt-in** by design: the form takes an address and the person
+is subscribed, no confirmation email. The tradeoffs are absorbed elsewhere -- a
+honeypot field and per-IP rate limit on the form, and the sending subdomain
+quarantining reputation.
+
+> **One SPF record per hostname.** A hostname may have exactly one `v=spf1` TXT
+> record. Zoho's lives on the root; Resend's lives on `send.` -- they do not
+> collide. Only if you later send from the root as well would you merge them:
+> `v=spf1 include:zoho.com include:_spf.resend.com ~all`
 
 ---
 
-## 3. Sending auth email
+## 3. Admin magic links
 
-> **The Zoho free plan cannot send the magic-link emails.** Zoho removed SMTP from the free tier,
-> so there is no relay to give Supabase. This is the one part of the setup that needs a decision.
+**Current setup: no SMTP configured.** Magic links go to a Gmail address through
+Supabase's built-in sender, which works because of a rule worth understanding:
+without custom SMTP, Supabase Auth refuses to deliver to any address that is not
+a member of the project's Supabase organisation. The account owner is
+`ishant.devdesign@gmail.com`, and that is the only address in `ADMIN_EMAILS`.
 
-Supabase's built-in email sender is rate-limited to a handful of messages per hour and is not
-intended for production, so pick one:
+Two limits:
 
-**Option A -- Zoho Mail Lite** (~INR 59/user/month)
-Unlocks SMTP. In Supabase, **Project settings -> Auth -> SMTP Settings**:
+- **2 emails per hour, project-wide.** Requesting three links in a row means the
+  third is silently never sent, with no client-side error.
+- **Team members only.** Adding a `@spectrerex.com` address to `ADMIN_EMAILS`
+  will not work until that address joins the Supabase organisation, or custom
+  SMTP is configured.
 
-```
-Host: smtp.zoho.com     Port: 465     Username: ishant@spectrerex.com
-Password: an app-specific password from accounts.zoho.com -> Security -> App passwords
-Sender: admin@spectrerex.com
-```
-
-**Option B -- a transactional provider** (Resend, Postmark, Brevo, SendGrid)
-Free tiers cover magic links comfortably. Verify `spectrerex.com` with the provider, then use its
-SMTP credentials in the same Supabase screen with `From: admin@spectrerex.com`.
-
-Sending and receiving are independent. Keep Zoho's MX records for inbound mail and add the sending
-provider's SPF and DKIM records alongside them.
-
-> **One SPF record only.** A domain may have exactly one `v=spf1` TXT record. If you send through a
-> second provider, extend the existing record rather than adding another:
-> `v=spf1 include:zoho.com include:_spf.resend.com ~all`
+Custom SMTP becomes necessary when a non-Gmail address needs to log in, or links
+should come from the studio's domain. It also raises the limit to 30/hour.
+Configure under **Authentication -> SMTP Settings**. The Zoho free plan cannot
+provide it (no SMTP); point it at Resend instead, reusing the account from 2.3.
 
 ---
 
@@ -280,5 +374,7 @@ supabase/
   schema and seed data are all in place for it.
 - **Images are AI-generated placeholders** in `public/assets/img/`. Swap them for real art; the
   paths and aspect handling stay the same.
+- **Subscriber mail is not built.** The `subscribers` table exists but nothing writes to it, there
+  is no signup form, and no broadcast composer in `/admin`. Section 2.3 is the plan, not the state.
 - **`npm run lint`** reports five pre-existing `react-hooks` warnings in `SmoothScroll`, `Marquee`
   and `lib/hooks.ts`. They do not block the build.

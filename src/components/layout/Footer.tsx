@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { PixelTag } from "@/components/ui/chrome";
 import { LogoMark } from "@/components/svg/LogoMark";
 import { DragonMark } from "@/components/svg/DragonMark";
+import { CONTACTS } from "@/data/content";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -25,11 +26,12 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   },
   {
     title: "CONNECT",
-    links: [
-      { label: "General", href: "mailto:hello@spectrerex.com" },
-      { label: "Press", href: "mailto:press@spectrerex.com" },
-      { label: "Business", href: "mailto:work@spectrerex.com" },
-    ],
+    // Derived from CONTACTS so the footer cannot drift out of step with the
+    // contact page, which is what happened when both lists were hand-written.
+    links: CONTACTS.map((c) => ({
+      label: c.label.charAt(0) + c.label.slice(1).toLowerCase(),
+      href: `mailto:${c.email}`,
+    })),
   },
 ];
 

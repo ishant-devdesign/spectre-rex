@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Block } from "@/lib/blocks";
 import { Redacted } from "@/components/ui/chrome";
 import { RevealBlock } from "@/components/content/RevealBlock";
+import { RichText } from "@/components/content/RichText";
 
 /**
  * Renders editor blocks for the public site. Shared by the live pages and
@@ -23,23 +24,33 @@ function BlockView({ block }: { block: Block }) {
     case "title":
       return (
         <h2 className="mt-4 font-display text-[2rem] leading-tight font-extrabold tracking-[-0.03em] md:text-[2.6rem]">
-          {block.text}
+          <RichText text={block.text} />
         </h2>
       );
 
     case "subtitle":
       return (
         <h3 className="mt-2 font-display text-[1.35rem] leading-snug font-bold tracking-[-0.02em] md:text-[1.6rem]">
-          {block.text}
+          <RichText text={block.text} />
         </h3>
       );
 
-    case "paragraph":
+    case "paragraph": {
+      /* Size is per-block so an author can open with a lead paragraph
+         without reaching for a heading, which would lie to screen readers
+         about the document outline. */
+      const scale = {
+        sm: "text-[14.5px] leading-relaxed text-ink/60",
+        base: "text-[16.5px] leading-relaxed text-ink/75",
+        lg: "text-[18.5px] leading-relaxed text-ink/80",
+        lead: "text-[21px] leading-[1.55] text-ink/85 md:text-[23px]",
+      }[block.size ?? "base"];
       return (
-        <p className="text-[16.5px] leading-relaxed text-ink/75">
-          {block.text}
+        <p className={scale}>
+          <RichText text={block.text} />
         </p>
       );
+    }
 
     case "list": {
       const List = block.ordered ? "ol" : "ul";
@@ -98,7 +109,11 @@ function BlockView({ block }: { block: Block }) {
     case "classified":
       return (
         <p className="flex flex-wrap items-center gap-x-2 gap-y-3 text-[16.5px] leading-relaxed text-ink/75">
-          {block.text ? <span>{block.text}</span> : null}
+          {block.text ? (
+            <span>
+              <RichText text={block.text} />
+            </span>
+          ) : null}
           <Redacted count={block.blocks} />
         </p>
       );
@@ -199,7 +214,7 @@ function BlockView({ block }: { block: Block }) {
       return (
         <figure className="border-l-2 border-spectre pl-6">
           <blockquote className="font-display text-[1.5rem] leading-snug font-semibold tracking-[-0.02em] text-ink md:text-[1.85rem]">
-            “{block.text}”
+            “<RichText text={block.text} />”
           </blockquote>
           {block.attribution ? (
             <figcaption className="mt-4 font-pixel text-[10px] tracking-[0.3em] text-ink/45 uppercase">

@@ -7,6 +7,16 @@
  * type-checked against it.
  */
 
+/** Paragraph scale. `lead` is the oversized opener under a headline. */
+export type ParagraphSize = "sm" | "base" | "lg" | "lead";
+
+export const PARAGRAPH_SIZES: { value: ParagraphSize; label: string }[] = [
+  { value: "sm", label: "Small" },
+  { value: "base", label: "Normal" },
+  { value: "lg", label: "Large" },
+  { value: "lead", label: "Lead" },
+];
+
 export type BlockType =
   | "title"
   | "subtitle"
@@ -28,7 +38,7 @@ interface Base {
 export type Block =
   | (Base & { type: "title"; text: string })
   | (Base & { type: "subtitle"; text: string })
-  | (Base & { type: "paragraph"; text: string })
+  | (Base & { type: "paragraph"; text: string; size?: ParagraphSize })
   | (Base & { type: "list"; ordered: boolean; items: string[] })
   | (Base & { type: "table"; headers: string[]; rows: string[][] })
   | (Base & { type: "classified"; text: string; blocks: number })

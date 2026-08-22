@@ -30,11 +30,12 @@ function mulberry32(seed: number) {
 
 function ClassifiedCard({
   index,
-  blocks,
+  title,
   seed,
 }: {
   index: string;
-  blocks: number;
+  /** Ciphertext from the read layer, not a placeholder drawn here. */
+  title: string;
   seed: number;
 }) {
   const rand = mulberry32(seed);
@@ -85,8 +86,8 @@ function ClassifiedCard({
 
       <div className="mt-5 flex items-start justify-between gap-4 border-t border-ink/10 pt-4">
         <div>
-          <div className="flex items-center font-display text-lg font-bold tracking-[-0.01em] text-ink">
-            PROJECT <Redacted count={blocks} />
+          <div className="truncate font-display text-lg font-bold tracking-[-0.01em] text-ink/45 select-none">
+            {title}
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
             <Chip tone="solid">Classified</Chip>
@@ -152,6 +153,9 @@ export default async function ProjectsPage() {
           <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {visible.map((entry, i) => (
               <Reveal key={entry.id} delay={i * 0.1}>
+                {/* The link wraps the whole card, including the image. The
+                    card no longer contains its own anchor, so there is
+                    nothing to nest and the entire tile is one hit target. */}
                 <TransitionLink
                   href={`/projects/${entry.slug}`}
                   aria-label={entry.title || `Project ${entry.code}`}
@@ -160,17 +164,10 @@ export default async function ProjectsPage() {
                   <ConceptCard
                     index={entry.code}
                     image={entry.heroImage ?? "/assets/img/concept-1.jpg"}
-                    blocks={0}
+                    title={entry.title || `Project ${entry.code}`}
+                    caption={entry.subtitle || "Concept exploration"}
                     dark={false}
                   />
-                  <p className="mt-4 font-display text-[1.15rem] font-bold tracking-[-0.015em] transition-colors group-hover:text-spectre">
-                    {entry.title}
-                  </p>
-                  {entry.summary ? (
-                    <p className="mt-1.5 text-[14px] leading-relaxed text-ink/50">
-                      {entry.summary}
-                    </p>
-                  ) : null}
                 </TransitionLink>
               </Reveal>
             ))}
@@ -198,12 +195,9 @@ export default async function ProjectsPage() {
                     and offering a click that dead-ends is worse than none. */}
                 <ClassifiedCard
                   index={entry.code}
-                  blocks={Math.max(6, entry.title.length)}
+                  title={entry.title}
                   seed={Number.parseInt(entry.code, 10) || i + 1}
                 />
-                <p className="mt-4 truncate font-display text-[1.15rem] font-bold tracking-[-0.015em] text-ink/40 select-none">
-                  {entry.title}
-                </p>
               </Reveal>
             ))}
             {classified.length === 0 ? (

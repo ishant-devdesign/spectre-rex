@@ -15,6 +15,7 @@ import {
   emptyBlock,
   type Block,
   type BlockType,
+  PARAGRAPH_SIZES,
 } from "@/lib/blocks";
 import { saveEntry, type Entry } from "@/app/(admin)/admin/entries/actions";
 import { ImageField } from "./ImageField";
@@ -24,6 +25,19 @@ const FIELD =
   "w-full border border-paper/20 bg-white/[0.03] px-3.5 py-2.5 font-body text-[14.5px] text-paper placeholder:text-paper/25 outline-none transition-colors duration-300 focus:border-spectre";
 const LABEL =
   "mb-2 block font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase";
+
+/**
+ * Inline markup is a fixed five-tag vocabulary parsed into React elements,
+ * never injected as HTML -- so it is worth telling the author exactly which
+ * tags exist rather than letting them guess and get literal angle brackets.
+ */
+function FormattingHint() {
+  return (
+    <p className="font-pixel text-[9px] leading-relaxed tracking-[0.14em] text-paper/30 uppercase">
+      {"<b> <i> <u> <code> <reveal>"}
+    </p>
+  );
+}
 
 export function EntryEditor({ entry }: { entry: Entry }) {
   const [title, setTitle] = useState(entry.title);
@@ -348,13 +362,38 @@ function BlockFields({
 
     case "paragraph":
       return (
-        <textarea
-          rows={4}
-          value={block.text}
-          onChange={(event) => update(block.id, { text: event.target.value })}
-          placeholder="Body copy"
-          className={`${FIELD} resize-y`}
-        />
+        <div className="grid gap-2.5">
+          <textarea
+            rows={4}
+            value={block.text}
+            onChange={(event) => update(block.id, { text: event.target.value })}
+            placeholder="Body copy"
+            className={`${FIELD} resize-y`}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-pixel text-[9px] tracking-[0.24em] text-paper/35 uppercase">
+              Size
+            </span>
+            {PARAGRAPH_SIZES.map((option) => {
+              const active = (block.size ?? "base") === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => update(block.id, { size: option.value })}
+                  className={`border px-2.5 py-1 font-pixel text-[9px] tracking-[0.2em] uppercase transition-colors duration-300 ${
+                    active
+                      ? "border-spectre bg-spectre text-night"
+                      : "border-paper/20 text-paper/50 hover:text-paper"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          <FormattingHint />
+        </div>
       );
 
     case "classified":

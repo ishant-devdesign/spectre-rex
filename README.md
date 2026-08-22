@@ -173,6 +173,39 @@ preview, through the same `toPublicEntry()` boundary. Preview used to be a
 separate 760px article, so authors were shown something no reader would ever
 see; a classified draft now previews as scrambled, because that is what ships.
 
+### Inline formatting
+
+Block text supports five tags: `<b>`, `<i>`, `<u>`, `<code>` and `<reveal>`.
+They nest, and an unclosed tag runs to the end of the string rather than
+swallowing the document.
+
+`src/components/content/RichText.tsx` is a **parser, not a sanitiser**. It
+tokenises that fixed vocabulary into React elements; anything else is literal
+text. No `dangerouslySetInnerHTML` is involved, so a `<script>`, an
+`onerror` attribute or a `javascript:` href written into a block renders as
+visible characters and cannot execute -- verified against all three.
+
+Paragraphs carry a `size` of `sm`, `base`, `lg` or `lead`. `lead` is the
+oversized opener, so an author can start big without using a heading and
+lying to screen readers about the document outline.
+
+### Title, subtitle, summary
+
+Three distinct fields with three distinct jobs:
+
+| Field | Where it renders |
+|---|---|
+| Title | the headline |
+| Subtitle | directly under the headline, qualifying it |
+| Summary | opening the body at lead size, above the blocks |
+
+Summary is not hero copy. It is the standing introduction to the piece, so
+it sits with the prose it introduces.
+
+Every entry closes with an end-of-transmission rule. Classified entries
+render a fixed stand-in body -- held in the component, not the database, so
+the author's editor shows their actual draft rather than a placeholder.
+
 ### Newsletter and contact
 
 Two public endpoints, both stateless apart from one table:

@@ -53,6 +53,7 @@ src/components/cards/GameCard.tsx
 src/components/content/BlockRenderer.tsx
 src/components/content/EntryArticle.tsx
 src/components/content/RevealBlock.tsx
+src/components/content/RichText.tsx
 src/components/layout/Footer.tsx
 src/components/layout/Nav.tsx
 src/components/motion/Magnetic.tsx

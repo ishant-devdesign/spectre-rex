@@ -217,7 +217,8 @@ export default async function HomePage() {
                   <ConceptCard
                     index={entry.code}
                     image="/assets/img/concept-1.jpg"
-                    blocks={Math.max(6, entry.title.length)}
+                    title={entry.title}
+                    caption="Clearance: dragon only"
                     dark
                   />
                 ) : (
@@ -229,7 +230,8 @@ export default async function HomePage() {
                     <ConceptCard
                       index={entry.code}
                       image={entry.heroImage ?? "/assets/img/concept-1.jpg"}
-                      blocks={0}
+                      title={entry.title || `Project ${entry.code}`}
+                      caption={entry.subtitle || "Concept exploration"}
                       dark
                     />
                   </TransitionLink>

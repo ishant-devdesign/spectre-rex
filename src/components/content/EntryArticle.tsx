@@ -4,6 +4,7 @@ import { TransitionLink } from "@/components/transition/TransitionLink";
 import { Reveal } from "@/components/motion/bits";
 import { PageHero } from "@/components/sections/PageHero";
 import { BlockRenderer } from "@/components/content/BlockRenderer";
+import { RevealBlock } from "@/components/content/RevealBlock";
 import type { PublicEntry } from "@/lib/entries";
 
 /**
@@ -19,6 +20,58 @@ import type { PublicEntry } from "@/lib/entries";
  * affordances that make no sense inside the admin frame, and nothing else
  * differs.
  */
+/**
+ * Stand-in body for a classified entry.
+ *
+ * The real blocks never leave the server, so there is nothing to render --
+ * but an empty page reads as a bug rather than as withheld information.
+ * This is static copy held in the component, not in the database: storing
+ * it as content would put a placeholder in the author's editor where their
+ * actual draft should be.
+ */
+function ClassifiedBody() {
+  return (
+    <div className="grid gap-7">
+      <p className="text-[16.5px] leading-relaxed text-ink/75">
+        The contents of this transmission are classified.
+      </p>
+      <p className="text-[16.5px] leading-relaxed text-ink/75">
+        Development continues behind closed doors. What exists is real; what
+        is written about it is not yet for you.
+      </p>
+      <RevealBlock
+        label="Attempt access"
+        text="Clearance insufficient. The dragon declines to elaborate."
+      />
+      <div className="border border-ink/12 bg-ink/[0.03]">
+        <pre className="overflow-x-auto px-5 py-5">
+          <code className="font-pixel text-[13px] leading-relaxed">
+            -- ACCESS DENIED
+          </code>
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+/** Sign-off every entry ends on. */
+function EndOfTransmission({ kind, code }: { kind: string; code: string }) {
+  return (
+    <div
+      aria-hidden
+      className="mt-20 flex items-center gap-4 border-t border-ink/10 pt-8"
+    >
+      <span className="font-pixel text-[10px] tracking-[0.3em] text-ink/40 uppercase">
+        End of transmission
+      </span>
+      <span className="h-px flex-1 bg-ink/12" />
+      <span className="font-pixel text-[10px] tracking-[0.3em] text-ink/30 uppercase">
+        {kind === "signal" ? "SIG" : "PRJ"} {code}
+      </span>
+    </div>
+  );
+}
+
 export function EntryArticle({
   entry,
   previous,
@@ -86,15 +139,7 @@ export function EntryArticle({
             ) : null}
           </>
         }
-      >
-        {entry.summary ? (
-          <Reveal delay={0.66} y={18} scroll={false}>
-            <p className="mt-8 max-w-[62ch] text-[15.5px] leading-relaxed text-paper/55 md:text-[17px]">
-              {entry.summary}
-            </p>
-          </Reveal>
-        ) : null}
-      </PageHero>
+      />
 
       {entry.heroImage ? (
         <section className="bg-paper">
@@ -120,15 +165,35 @@ export function EntryArticle({
 
       <section className="bg-paper text-ink">
         <div className="mx-auto max-w-[820px] px-5 py-20 md:px-10 md:py-28">
-          {entry.blocks.length > 0 ? (
+          {/* Summary opens the body at lead size rather than sitting in the
+              hero. It is the standing intro to the piece, so it belongs with
+              the prose it introduces -- the subtitle stays under the
+              headline, where it qualifies the title. */}
+          {entry.summary ? (
+            <Reveal y={20}>
+              <p
+                className={`mb-12 border-l-2 pl-6 text-[21px] leading-[1.55] md:text-[24px] ${
+                  entry.classified
+                    ? "border-ink/15 text-ink/40 select-none"
+                    : "border-spectre text-ink/85"
+                }`}
+              >
+                {entry.summary}
+              </p>
+            </Reveal>
+          ) : null}
+
+          {entry.classified ? (
+            <ClassifiedBody />
+          ) : entry.blocks.length > 0 ? (
             <BlockRenderer blocks={entry.blocks} />
           ) : (
             <p className="border border-ink/10 bg-ink/[0.02] px-6 py-14 text-center text-[15px] text-ink/45">
-              {entry.classified
-                ? "Contents withheld. Clearance insufficient."
-                : "Nothing written here yet."}
+              Nothing written here yet.
             </p>
           )}
+
+          <EndOfTransmission kind={entry.kind} code={entry.code} />
         </div>
       </section>
 

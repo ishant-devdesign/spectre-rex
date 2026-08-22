@@ -1,31 +1,34 @@
 import Image from "next/image";
-import { TransitionLink } from "@/components/transition/TransitionLink";
 import { Clip } from "@/components/motion/bits";
-import { ArrowSquare, Chip, Redacted } from "@/components/ui/chrome";
+import { ArrowSquare, Chip } from "@/components/ui/chrome";
 
 /**
- * Abstract concept card — image with a codename kept under redaction.
- * Deliberately abstract: the real projects stay under wraps.
+ * Concept card. Presentational only.
+ *
+ * This used to wrap itself in a TransitionLink pointing at /projects. Once
+ * callers began wrapping it in a link to the entry, that produced nested
+ * anchors -- which is invalid HTML, and browsers resolve it by splitting the
+ * element, so only the part after the inner anchor stayed clickable. Hence
+ * "only the lower part is clickable". Linking is the caller's job now.
  */
 export function ConceptCard({
   index,
   image,
-  blocks,
+  title,
+  caption = "Not a game reveal",
   dark = true,
   className = "",
 }: {
   index: string;
   image: string;
-  blocks: number;
+  /** Already redacted by the read layer when the entry is classified. */
+  title: string;
+  caption?: string;
   dark?: boolean;
   className?: string;
 }) {
   return (
-    <TransitionLink
-      href="/projects"
-      className={`group block ${className}`}
-      aria-label={`Concept ${index} — codename classified`}
-    >
+    <div className={`group block ${className}`}>
       <Clip className={`relative aspect-[4/3] ${dark ? "bg-night" : "bg-ghost"}`}>
         <div
           className="absolute inset-0 overflow-hidden"
@@ -33,7 +36,7 @@ export function ConceptCard({
         >
           <Image
             src={image}
-            alt={`Abstract concept exploration ${index}`}
+            alt={title}
             fill
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
@@ -72,7 +75,7 @@ export function ConceptCard({
               dark ? "text-paper" : "text-ink"
             }`}
           >
-            PROJECT <Redacted count={blocks} />
+            <span className="truncate">{title}</span>
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
             <Chip tone={dark ? "paper" : "ink"}>Abstract exploration</Chip>
@@ -81,12 +84,12 @@ export function ConceptCard({
                 dark ? "text-paper/35" : "text-ink/40"
               }`}
             >
-              Not a game reveal
+              {caption}
             </span>
           </div>
         </div>
         <ArrowSquare tone={dark ? "paper" : "ink"} />
       </div>
-    </TransitionLink>
+    </div>
   );
 }

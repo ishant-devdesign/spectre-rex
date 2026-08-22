@@ -18,6 +18,7 @@ public/assets/img/concept-3.jpg
 public/assets/img/hero.jpg
 public/assets/img/studio.jpg
 src/app/(admin)/admin/campaigns/page.tsx
+src/app/(admin)/admin/entries/[kind]/[id]/email/page.tsx
 src/app/(admin)/admin/entries/[kind]/[id]/page.tsx
 src/app/(admin)/admin/entries/[kind]/[id]/preview/page.tsx
 src/app/(admin)/admin/entries/actions.ts
@@ -45,6 +46,7 @@ src/app/icon.svg
 src/app/layout.tsx
 src/app/not-found.tsx
 src/components/admin/AdminHeader.tsx
+src/components/admin/CopyField.tsx
 src/components/admin/DeleteEntryButton.tsx
 src/components/admin/EntryEditor.tsx
 src/components/admin/EntryListPage.tsx
@@ -83,6 +85,7 @@ src/data/dragonPixels.ts
 src/db/index.ts
 src/db/schema.ts
 src/lib/blocks.ts
+src/lib/email/entryEmail.ts
 src/lib/entries.ts
 src/lib/hooks.ts
 src/lib/media.ts

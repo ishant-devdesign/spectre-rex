@@ -206,6 +206,37 @@ Every entry closes with an end-of-transmission rule. Classified entries
 render a fixed stand-in body -- held in the component, not the database, so
 the author's editor shows their actual draft rather than a placeholder.
 
+### Campaign templates
+
+Every entry has a **Campaign HTML** page at
+`/admin/entries/<kind>/<id>/email`, linked from the editor beside Preview. It
+renders the entry as email in the site's theme and hands over the subject,
+preview text, HTML and a plain-text alternative, each with a copy button and
+a live preview.
+
+Paste the HTML into Resend -> Broadcasts -> Upload HTML. There is no second
+editor to keep in step, and a campaign cannot drift from the entry it
+announces.
+
+Redaction runs first, so a classified entry produces a scrambled email rather
+than leaking a codename to the list.
+
+Email is not the web, and `src/lib/email/entryEmail.ts` is written for that:
+
+- Every rule is an inline `style` attribute. Gmail strips `<head>` on some
+  clients, so a `<style>` block cannot be relied on.
+- Layout is nested tables with explicit widths. Outlook renders with Word,
+  which supports neither flexbox nor grid.
+- Web fonts do not load, so the pixel display face falls back to a system
+  stack and the design leans on colour, rule weight and letter-spacing.
+- Image paths are made absolute; a root-relative `src` resolves to nothing
+  in an inbox.
+- `<reveal>` cannot be interactive without JavaScript, so it renders as a
+  redacted block that invites the click through to the site.
+
+`{{{RESEND_UNSUBSCRIBE_URL}}}` is already in the footer for Resend to
+substitute.
+
 ### Newsletter and contact
 
 Two public endpoints, both stateless apart from one table:

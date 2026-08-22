@@ -297,6 +297,12 @@ export function EntryEditor({ entry }: { entry: Entry }) {
               <Eye className="h-3.5 w-3.5" />
               Preview
             </a>
+            <a
+              href={`/admin/entries/${entry.kind}/${entry.id}/email`}
+              className="inline-flex items-center gap-2 border border-paper/25 px-3.5 py-2 font-pixel text-[9.5px] tracking-[0.24em] text-paper/60 uppercase transition-colors duration-300 hover:border-spectre hover:text-spectre"
+            >
+              Campaign HTML
+            </a>
           </div>
 
           {saved ? (

@@ -23,10 +23,12 @@ export function StructuredData() {
     email: SITE_EMAIL,
     address: {
       "@type": "PostalAddress",
+      streetAddress: "Plot No. 12, Prem Kunj",
       addressLocality: "Gurugram",
       addressRegion: "Haryana",
       addressCountry: "IN",
     },
+    telephone: "+91 721 070 7703",
     foundingDate: "2026",
     // sameAs is intentionally empty until the social profiles exist; fill
     // with the real URLs once Instagram / YouTube / X / LinkedIn are live.

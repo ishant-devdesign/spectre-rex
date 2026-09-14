@@ -56,7 +56,7 @@ export default async function HomePage() {
           <div className="animate-hero-zoom absolute inset-0">
             <Image
               src="/assets/img/hero.jpg"
-              alt=""
+              alt="Spectre Rex Studios — pixel-art game world by an independent game studio in Gurugram, India"
               fill
               priority
               sizes="100vw"
@@ -342,7 +342,7 @@ export default async function HomePage() {
             <Parallax from={-8} to={8} className="absolute inset-[-10%]">
               <Image
                 src="/assets/img/studio.jpg"
-                alt=""
+                alt="Inside the Spectre Rex game development studio in Gurugram — a dark workspace under blue light"
                 fill
                 sizes="100vw"
                 className="object-cover opacity-70"

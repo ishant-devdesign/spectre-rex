@@ -38,6 +38,7 @@ src/app/(admin)/layout.tsx
 src/app/(site)/contact/page.tsx
 src/app/(site)/layout.tsx
 src/app/(site)/page.tsx
+src/app/(site)/press/page.tsx
 src/app/(site)/projects/[slug]/page.tsx
 src/app/(site)/projects/page.tsx
 src/app/(site)/signals/[slug]/page.tsx

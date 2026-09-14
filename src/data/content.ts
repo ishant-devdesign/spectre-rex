@@ -32,7 +32,8 @@ export const DISCIPLINES: Discipline[] = [
   {
     index: "01",
     title: "Game Development",
-    description: "Original interactive experiences, prototypes, systems and worlds.",
+    description:
+      "Original interactive experiences, prototypes, systems and worlds.",
     stats: { ART: 3, CODE: 5, PIXEL: 4 },
     flavor: "Worlds, one frame at a time.",
     seed: 1101,
@@ -91,6 +92,25 @@ export const TEAM: TeamMember[] = [
     stats: { DESIGN: 4, CODE: 2, DRAGON: 3 },
     flavor: "New to the grid. Watch this space.",
     seed: 888,
+  },
+  {
+    initials: "AM",
+    name: "Amul",
+    role: "Game Developer",
+    description:
+      "Builds gameplay systems and the logic that makes worlds move.",
+    stats: { DESIGN: 3, CODE: 5, DRAGON: 3 },
+    flavor: "Makes the pixels move.",
+    seed: 901,
+  },
+  {
+    initials: "SU",
+    name: "Sushant",
+    role: "Game Developer",
+    description: "Writes code, tames bugs, and keeps the builds green.",
+    stats: { DESIGN: 3, CODE: 5, DRAGON: 4 },
+    flavor: "Ships it when it's ready.",
+    seed: 902,
   },
 ];
 
@@ -178,7 +198,12 @@ export const IDENTITY = [
   { index: "01", label: "Founded", value: "2026", note: "Year one" },
   { index: "02", label: "Based", value: "Gurugram", note: "India" },
   { index: "03", label: "Status", value: "Independent", live: "Building" },
-  { index: "04", label: "Specimen", value: "One dragon", note: "Pixel, winged" },
+  {
+    index: "04",
+    label: "Specimen",
+    value: "One dragon",
+    note: "Pixel, winged",
+  },
 ] as const;
 
 /**
@@ -196,14 +221,33 @@ export const IDENTITY = [
  * The footer renders this same array, so a change here propagates.
  */
 export const CONTACTS = [
-  { label: "GENERAL", email: "hello@spectrerex.com", note: "Say hi. Pitch. Propose chaos." },
-  { label: "SUPPORT", email: "support@spectrerex.com", note: "Something broken? Start here." },
-  { label: "PRESS", email: "press@spectrerex.com", note: "Media, interviews and kits." },
-  { label: "BUSINESS", email: "work@spectrerex.com", note: "Work with the studio." },
+  {
+    label: "GENERAL",
+    email: "hello@spectrerex.com",
+    note: "Say hi. Pitch. Propose chaos.",
+  },
+  {
+    label: "SUPPORT",
+    email: "support@spectrerex.com",
+    note: "Something broken? Start here.",
+  },
+  {
+    label: "PRESS",
+    email: "press@spectrerex.com",
+    note: "Media, interviews and kits.",
+  },
+  {
+    label: "BUSINESS",
+    email: "work@spectrerex.com",
+    note: "Work with the studio.",
+  },
 ] as const;
 
 export const STUDIO_META = [
-  { label: "STUDIO", value: ["Plot No. 12, Prem Kunj", "Gurugram, Haryana, India"] },
+  {
+    label: "STUDIO",
+    value: ["Plot No. 12, Prem Kunj", "Gurugram, Haryana, India"],
+  },
   { label: "PHONE", value: ["+91 721 070 7703", "+91 98713 09390"] },
   { label: "CIN", value: ["U58203HR2026PTC147441"] },
   { label: "TIMEZONE", value: ["IST (GMT+5:30)"] },

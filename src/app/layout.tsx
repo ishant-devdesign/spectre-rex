@@ -28,13 +28,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/assets/img/hero.jpg"],
+    images: ["/assets/og.png"],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/assets/img/hero.jpg"],
+    images: ["/assets/og.png"],
   },
   icons: {
     icon: "/icon.svg",
@@ -77,7 +77,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-paper font-body text-ink antialiased">{children}</body>
+      <body className="bg-paper font-body text-ink antialiased">
+        {children}
+      </body>
     </html>
   );
 }

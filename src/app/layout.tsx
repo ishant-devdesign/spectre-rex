@@ -1,21 +1,45 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://spectrerex.com"),
+  /* www is the canonical host — the bare domain 308s here in Vercel. All
+     absolute URLs (OG images, sitemap, canonical) derive from this. */
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Spectre Rex Studios — Independent Game Studio in Gurugram, India",
     template: "%s — Spectre Rex Studios",
   },
-  description:
-    "Spectre Rex Studios is an independent game studio crafting memorable games and digital experiences — bold ideas, built pixel by pixel.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "indie game studio",
+    "game development India",
+    "Gurugram game studio",
+    "pixel art games",
+    "Spectre Rex",
+  ],
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "Spectre Rex Studios",
-    description:
-      "Independent game studio crafting memorable games and digital experiences — bold ideas, built pixel by pixel.",
-    images: ["/assets/img/hero.jpg"],
     type: "website",
+    siteName: SITE_NAME,
+    locale: "en_IN",
+    url: SITE_URL,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: ["/assets/img/hero.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: ["/assets/img/hero.jpg"],
+  },
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
   },
 };
 

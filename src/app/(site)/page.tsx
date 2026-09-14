@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import {
   DISCIPLINES,
@@ -31,6 +32,10 @@ const DISCIPLINE_CARDS: GameCardData[] = DISCIPLINES.map((d) => ({
 }));
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function HomePage() {
   /* Same source as /projects and /signals. The home page used to render a

@@ -51,6 +51,8 @@ src/app/globals.css
 src/app/icon.svg
 src/app/layout.tsx
 src/app/not-found.tsx
+src/app/robots.ts
+src/app/sitemap.ts
 src/components/admin/AdminHeader.tsx
 src/components/admin/CopyField.tsx
 src/components/admin/DeleteEntryButton.tsx
@@ -74,6 +76,7 @@ src/components/sections/EntryRow.tsx
 src/components/sections/ListRow.tsx
 src/components/sections/PageHero.tsx
 src/components/sections/SubscribeForm.tsx
+src/components/seo/StructuredData.tsx
 src/components/svg/DragonMark.tsx
 src/components/svg/LogoMark.tsx
 src/components/transition/PixelTransitionShell.tsx
@@ -98,6 +101,7 @@ src/lib/hooks.ts
 src/lib/media.ts
 src/lib/redact.ts
 src/lib/resend.ts
+src/lib/seo.ts
 src/lib/supabase/browser.ts
 src/lib/supabase/config.ts
 src/lib/supabase/server.ts

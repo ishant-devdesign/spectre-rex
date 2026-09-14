@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Signals",
   description:
     "Signals — transmissions from inside the studio. Irregular, honest, occasionally classified.",
+  alternates: { canonical: "/signals" },
 };
 
 export const dynamic = "force-dynamic";

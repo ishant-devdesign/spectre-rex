@@ -14,6 +14,7 @@ export const metadata: Metadata = {
   title: "Contact",
   description:
     "Have a project, an idea, or just want to talk games? The dragon reads every line.",
+  alternates: { canonical: "/contact" },
 };
 
 const DEN_ICONS: Record<string, LucideIcon> = {

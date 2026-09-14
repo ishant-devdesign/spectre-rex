@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Studio",
   description:
     "We’re Spectre Rex — an independent game studio building games, digital experiences, and the strange ideas between them.",
+  alternates: { canonical: "/studio" },
 };
 
 const TEAM_CARDS: GameCardData[] = TEAM.map((m) => ({

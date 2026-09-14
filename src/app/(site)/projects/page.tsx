@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   title: "Projects",
   description:
     "Concepts, not reveals. Our real projects stay under wraps — these are abstract concept explorations.",
+  alternates: { canonical: "/projects" },
 };
 
 /* ------------------------------------------------------------------ */

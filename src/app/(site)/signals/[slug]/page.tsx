@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPublishedBySlug, listPublished, neighbours } from "@/lib/entries";
+import { absoluteUrl } from "@/lib/seo";
 import { EntryArticle } from "@/components/content/EntryArticle";
 
 /* Rendered per request: entries change from the admin panel, and a stale
@@ -15,7 +16,27 @@ export async function generateMetadata({
   const { slug } = await params;
   const entry = await getPublishedBySlug("signal", slug);
   if (!entry) return {};
-  return { title: entry.title, description: entry.summary || undefined };
+  const url = absoluteUrl(`/signals/${entry.slug}`);
+  const image = entry.heroImage ?? "/assets/img/concept-1.jpg";
+  return {
+    title: entry.title,
+    description: entry.summary || undefined,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title: entry.title,
+      description: entry.summary || undefined,
+      images: [{ url: absoluteUrl(image), alt: entry.title }],
+      publishedTime: entry.updatedAt.toISOString(),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: entry.title,
+      description: entry.summary || undefined,
+      images: [absoluteUrl(image)],
+    },
+  };
 }
 
 export default async function SignalArticlePage({

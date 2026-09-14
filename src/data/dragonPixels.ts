@@ -206,6 +206,7 @@ export const DRAGON_PIXELS: readonly (readonly [number, number])[] = [
   [8, 20],
   [10, 20],
   [2, 21],
+  [2, 22],
   [5, 22],
   [6, 22],
   [3, 23],

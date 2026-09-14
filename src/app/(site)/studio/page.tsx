@@ -8,9 +8,9 @@ import { PageHero } from "@/components/sections/PageHero";
 import { ListRow } from "@/components/sections/ListRow";
 
 export const metadata: Metadata = {
-  title: "Studio",
+  title: "Game Development Studio in Gurugram, India",
   description:
-    "We’re Spectre Rex — an independent game studio building games, digital experiences, and the strange ideas between them.",
+    "Spectre Rex is an independent game development studio in Gurugram (Gurgaon), India — crafting original games, game art, and digital experiences.",
   alternates: { canonical: "/studio" },
 };
 
@@ -41,10 +41,11 @@ export default function StudioPage() {
           <div className="mt-12 grid gap-10 md:grid-cols-2">
             <Reveal delay={0.9} scroll={false}>
               <p className="max-w-xl text-base leading-relaxed text-paper/65 md:text-lg">
-                We’re Spectre Rex — an independent game studio building games,
-                digital experiences, and the strange ideas between them.
-                Founded in 2026 and based in Gurugram, India, we’re a small
-                team with a long attention span and a fondness for the strange.
+                We’re Spectre Rex — an independent game development studio in
+                Gurugram (Gurgaon), India. We build original games, game art,
+                and the strange digital experiences between them. Founded in
+                2026, we’re a small team with a long attention span and a
+                fondness for the strange.
               </p>
             </Reveal>
             <Reveal delay={1.05} scroll={false}>

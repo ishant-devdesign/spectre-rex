@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 import { listPublished } from "@/lib/entries";
 import { SITE_URL } from "@/lib/seo";
 
-/* Always reflect the live DB: entries are edited from the admin panel, and
-   a build-time snapshot would keep advertising entries that were just
-   unpublished (or miss ones that were just published). */
-export const dynamic = "force-dynamic";
+/* Rebuilt hourly rather than force-dynamic: entries are edited from the
+   admin panel, but a sitemap does not need sub-second freshness. Serving it
+   from the CDN cache keeps Googlebot's fetches instant (no DB round-trip,
+   no cold start) and removes any chance of a fetch timing out. */
+export const revalidate = 3600;
 
 /**
  * Static routes plus every published, non-classified entry.

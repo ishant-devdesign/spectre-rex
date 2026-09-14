@@ -77,9 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-paper font-body text-ink antialiased">
-        {children}
-      </body>
+      <body className="bg-paper font-body text-ink antialiased">{children}</body>
     </html>
   );
 }

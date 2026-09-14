@@ -11,9 +11,9 @@ import { SubscribeForm } from "@/components/sections/SubscribeForm";
 import { DragonMark } from "@/components/svg/DragonMark";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact — Hire an Indie Game Studio",
   description:
-    "Have a project, an idea, or just want to talk games? The dragon reads every line.",
+    "Hire Spectre Rex — an independent game development studio in Gurugram, India. Tell us about your game, project, or idea. The dragon reads every line.",
   alternates: { canonical: "/contact" },
 };
 

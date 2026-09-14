@@ -9,9 +9,9 @@ import { PixelEgg } from "@/components/ui/PixelEgg";
 import { PageHero } from "@/components/sections/PageHero";
 
 export const metadata: Metadata = {
-  title: "Projects",
+  title: "Game Projects & Concepts",
   description:
-    "Concepts, not reveals. Our real projects stay under wraps — these are abstract concept explorations.",
+    "Spectre Rex game projects — abstract concept explorations and in-development games from our independent studio in Gurugram, India.",
   alternates: { canonical: "/projects" },
 };
 
@@ -117,7 +117,7 @@ export default async function ProjectsPage() {
   return (
     <>
       {/* ============================ HEADER =========================== */}
-      <PageHero eyebrow="Work / Projects" lines={["From the lab."]}>
+      <PageHero eyebrow="Work / Projects" lines={["Projects,", "from the lab."]}>
           <div className="mt-12 flex flex-wrap items-end justify-between gap-10">
             <Reveal delay={0.9} scroll={false} className="max-w-xl">
               <p className="text-base leading-relaxed text-paper/65 md:text-lg">

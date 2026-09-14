@@ -6,9 +6,9 @@ import { EntryRow } from "@/components/sections/EntryRow";
 import { PageHero } from "@/components/sections/PageHero";
 
 export const metadata: Metadata = {
-  title: "Signals",
+  title: "Signals — Indie Game Devlog",
   description:
-    "Signals — transmissions from inside the studio. Irregular, honest, occasionally classified.",
+    "Signals is the Spectre Rex indie game devlog — irregular, honest transmissions from inside our Gurugram studio.",
   alternates: { canonical: "/signals" },
 };
 
@@ -20,7 +20,7 @@ export default async function SignalsPage() {
   return (
     <>
       {/* ============================ HEADER =========================== */}
-      <PageHero eyebrow="Transmissions" lines={["Signals."]}>
+      <PageHero eyebrow="Transmissions" lines={["Signals from", "the studio."]}>
           <Reveal delay={0.9} scroll={false} className="mt-10">
             <p className="max-w-xl text-base leading-relaxed text-paper/65 md:text-lg">
               From inside the studio. Irregular, honest, occasionally

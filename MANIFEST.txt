@@ -78,6 +78,7 @@ src/components/sections/EntryRow.tsx
 src/components/sections/ListRow.tsx
 src/components/sections/PageHero.tsx
 src/components/sections/SubscribeForm.tsx
+src/components/seo/GoogleAnalytics.tsx
 src/components/seo/StructuredData.tsx
 src/components/svg/DragonMark.tsx
 src/components/svg/LogoMark.tsx

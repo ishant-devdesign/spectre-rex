@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { GoogleAnalytics } from "@/components/seo/GoogleAnalytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Pixelify+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap"
           rel="stylesheet"
         />
+        <GoogleAnalytics />
       </head>
       <body className="bg-paper font-body text-ink antialiased">{children}</body>
     </html>

@@ -21,7 +21,7 @@ const HTML = `<table role="presentation" width="100%" cellpadding="0" cellspacin
         <!-- masthead -->
         <tr>
           <td bgcolor="#0b1014" style="background:#0b1014;padding:0 0 26px">
-            <img src="https://www.spectrerex.com/assets/email/logo-paper.png"
+            <img src="https://spectrerex.com/assets/email/logo-paper.png"
                  alt="Spectre Rex"
                  width="200" height="50"
                  style="display:block;width:200px;height:auto;border:0;outline:none;text-decoration:none" />
@@ -60,7 +60,7 @@ const HTML = `<table role="presentation" width="100%" cellpadding="0" cellspacin
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px">
               <tr>
                 <td bgcolor="#35aee4" style="background:#35aee4">
-                  <a href="https://www.spectrerex.com"
+                  <a href="https://spectrerex.com"
                      style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:#0b1014;padding:14px 24px;text-decoration:none">
                     Visit the studio
                   </a>
@@ -85,7 +85,7 @@ const HTML = `<table role="presentation" width="100%" cellpadding="0" cellspacin
             </table>
             <div style="border-top:1px solid #272b2e;margin-top:16px;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:#5a5c5d">
               Spectre Rex Studios &middot; Gurugram, India<br />
-              <a href="https://www.spectrerex.com" style="color:#8a8b8a;text-decoration:none;border-bottom:1px solid #246f91">spectrerex.com</a>
+              <a href="https://spectrerex.com" style="color:#8a8b8a;text-decoration:none;border-bottom:1px solid #246f91">spectrerex.com</a>
             </div>
           </td>
         </tr>
@@ -113,7 +113,7 @@ export const CONTACT_ACK_TEXT = [
   "",
   "-- Automated response",
   "Spectre Rex Studios, Gurugram, India",
-  "https://www.spectrerex.com",
+  "https://spectrerex.com",
 ].join("\n");
 
 export function contactAckHtml(): string {

@@ -33,6 +33,29 @@ const nextConfig: NextConfig = {
       pathname: "/storage/v1/object/public/**",
     })),
   },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.spectrerex.com" }],
+        destination: "https://spectrerex.com/:path*",
+        permanent: true,
+      },
+      // Safety net if you ever add the American spelling domain
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.specterrex.com" }],
+        destination: "https://spectrerex.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "specterrex.com" }],
+        destination: "https://spectrerex.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

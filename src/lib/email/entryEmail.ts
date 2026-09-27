@@ -128,7 +128,7 @@ export interface EntryEmail {
 export function renderEntryEmail(
   entry: PublicEntry,
   more: PublicEntry[] = [],
-  siteUrl = "https://www.spectrerex.com",
+  siteUrl = "https://spectrerex.com",
 ): EntryEmail {
   const label = entry.kind === "signal" ? "SIGNAL" : "PROJECT";
   const url = entryUrl(entry, siteUrl);

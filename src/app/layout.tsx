@@ -4,8 +4,8 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  /* www is the canonical host — the bare domain 308s here in Vercel. All
-     absolute URLs (OG images, sitemap, canonical) derive from this. */
+  /* Apex is the canonical host — www 308s here via next.config.ts.
+     All absolute URLs (OG images, sitemap, canonical) derive from this. */
   metadataBase: new URL(SITE_URL),
   title: {
     default: "Spectre Rex Studios — Independent Game Studio in Gurugram, India",

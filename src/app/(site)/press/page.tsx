@@ -108,63 +108,20 @@ const FACTS: { k: string; v: string }[] = [
 /* Brand palette + type, kept in step with globals.css @theme.          */
 /* ------------------------------------------------------------------ */
 
-const COLORS: {
-  name: string;
-  hex: string;
-  value: string;
-  role: string;
-  light: boolean;
-}[] = [
-  {
-    name: "Night",
-    hex: "#0B1014",
-    value: "0B1014",
-    role: "Dark sections & backgrounds",
-    light: false,
-  },
-  {
-    name: "Paper",
-    hex: "#F2F0EA",
-    value: "F2F0EA",
-    role: "Light sections & surfaces",
-    light: true,
-  },
-  {
-    name: "Ink",
-    hex: "#242424",
-    value: "242424",
-    role: "Body copy & light-section text",
-    light: false,
-  },
-  {
-    name: "Spectre",
-    hex: "#35AEE4",
-    value: "35AEE4",
-    role: "Brand accent — the blue",
-    light: false,
-  },
-  {
-    name: "Ghost",
-    hex: "#E5F4FC",
-    value: "E5F4FC",
-    role: "Blue tint, hover states",
-    light: true,
-  },
+const COLORS: { name: string; hex: string; value: string; role: string; light: boolean }[] = [
+  { name: "Night", hex: "#0B1014", value: "0B1014", role: "Dark sections & backgrounds", light: false },
+  { name: "Paper", hex: "#F2F0EA", value: "F2F0EA", role: "Light sections & surfaces", light: true },
+  { name: "Ink", hex: "#242424", value: "242424", role: "Body copy & light-section text", light: false },
+  { name: "Spectre", hex: "#35AEE4", value: "35AEE4", role: "Brand accent — the blue", light: false },
+  { name: "Ghost", hex: "#E5F4FC", value: "E5F4FC", role: "Blue tint, hover states", light: true },
 ];
 
-const TYPEFACES: {
-  name: string;
-  role: string;
-  sample: string;
-  className: string;
-  note: string;
-}[] = [
+const TYPEFACES: { name: string; role: string; sample: string; className: string; note: string }[] = [
   {
     name: "Sora",
     role: "Display — headlines & titles",
     sample: "Spectre Rex Studios",
-    className:
-      "font-display font-extrabold tracking-[-0.02em] text-[2rem] md:text-[2.6rem] leading-tight",
+    className: "font-display font-extrabold tracking-[-0.02em] text-[2rem] md:text-[2.6rem] leading-tight",
     note: "600 · 700 · 800",
   },
   {
@@ -178,8 +135,7 @@ const TYPEFACES: {
     name: "Pixelify Sans",
     role: "Pixel — labels, meta & accents",
     sample: "CLEARANCE: DRAGON ONLY",
-    className:
-      "font-pixel text-[1.1rem] md:text-[1.3rem] tracking-[0.22em] uppercase",
+    className: "font-pixel text-[1.1rem] md:text-[1.3rem] tracking-[0.22em] uppercase",
     note: "400 · 500 · 600 · 700",
   },
 ];
@@ -343,7 +299,10 @@ export default function PressPage() {
       {/* =========================== COLORS =========================== */}
       <section className="bg-paper text-ink">
         <div className="mx-auto max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
-          <SectionHead eyebrow="Brand colours / 04" lines={["The palette."]} />
+          <SectionHead
+            eyebrow="Brand colours / 04"
+            lines={["The palette."]}
+          />
           <div className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-5">
             {COLORS.map((c, i) => (
               <Reveal key={c.name} delay={i * 0.06}>
@@ -389,9 +348,7 @@ export default function PressPage() {
                 <div className="grid gap-6 border border-paper/12 bg-white/[0.02] p-8 md:grid-cols-12 md:p-10">
                   <div className="md:col-span-4">
                     <p className="text-[16px] font-semibold">{f.name}</p>
-                    <p className="mt-1.5 text-[13.5px] text-paper/50">
-                      {f.role}
-                    </p>
+                    <p className="mt-1.5 text-[13.5px] text-paper/50">{f.role}</p>
                     <p className="mt-4 font-pixel text-[10px] tracking-[0.24em] text-spectre uppercase">
                       {f.note}
                     </p>
@@ -463,9 +420,9 @@ export default function PressPage() {
           />
           <Reveal delay={0.1} className="mt-12">
             <p className="max-w-xl text-base leading-relaxed text-paper/60">
-              For interviews, review builds, or anything that isn&apos;t
-              answered by the kit — write to {PRESS_EMAIL}. We read every line,
-              usually after one dragon nap.
+              For interviews, review builds, or anything that isn&apos;t answered
+              by the kit — write to {PRESS_EMAIL}. We read every line, usually
+              after one dragon nap.
             </p>
           </Reveal>
           <Reveal delay={0.2} className="mt-10 flex flex-wrap gap-4">

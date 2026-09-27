@@ -40,30 +40,30 @@ export default function StudioPage() {
         lines={["A small studio building", "colossal worlds."]}
         accent={["colossal"]}
       >
-        <div className="mt-12 grid gap-10 md:grid-cols-2">
-          <Reveal delay={0.9} scroll={false}>
-            <p className="max-w-xl text-base leading-relaxed text-paper/65 md:text-lg">
-              We’re Spectre Rex — an independent game development studio in
-              Gurugram (Gurgaon), India. We build original games, game art, and
-              the strange digital experiences between them. Founded in 2026,
-              we’re a small team with a long attention span and a fondness for
-              the strange.
-            </p>
-          </Reveal>
-          <Reveal delay={1.05} scroll={false}>
-            <div className="flex flex-wrap gap-x-10 gap-y-4 md:justify-end">
-              <span className="font-pixel text-[10px] tracking-[0.3em] text-paper/40 uppercase">
-                Est. 2026
-              </span>
-              <span className="font-pixel text-[10px] tracking-[0.3em] text-paper/40 uppercase">
-                Gurugram, India
-              </span>
-              <span className="font-pixel text-[10px] tracking-[0.3em] text-spectre uppercase">
-                Independent
-              </span>
-            </div>
-          </Reveal>
-        </div>
+          <div className="mt-12 grid gap-10 md:grid-cols-2">
+            <Reveal delay={0.9} scroll={false}>
+              <p className="max-w-xl text-base leading-relaxed text-paper/65 md:text-lg">
+                We’re Spectre Rex — an independent game development studio in
+                Gurugram (Gurgaon), India. We build original games, game art,
+                and the strange digital experiences between them. Founded in
+                2026, we’re a small team with a long attention span and a
+                fondness for the strange.
+              </p>
+            </Reveal>
+            <Reveal delay={1.05} scroll={false}>
+              <div className="flex flex-wrap gap-x-10 gap-y-4 md:justify-end">
+                <span className="font-pixel text-[10px] tracking-[0.3em] text-paper/40 uppercase">
+                  Est. 2026
+                </span>
+                <span className="font-pixel text-[10px] tracking-[0.3em] text-paper/40 uppercase">
+                  Gurugram, India
+                </span>
+                <span className="font-pixel text-[10px] tracking-[0.3em] text-spectre uppercase">
+                  Independent
+                </span>
+              </div>
+            </Reveal>
+          </div>
       </PageHero>
 
       {/* ============================= STORY =========================== */}

@@ -3,12 +3,6 @@ import { SITE_URL } from "@/lib/seo";
 
 export const revalidate = 3600;
 
-/**
- * Custom sitemap route — avoids Next.js MetadataRoute's
- * `content-disposition: inline` header which occasionally makes
- * Google Search Console report "Couldn't fetch / Unknown type".
- * Returns plain application/xml with no disposition.
- */
 export async function GET() {
   const staticRoutes = [
     { loc: `${SITE_URL}/`, changefreq: "weekly", priority: "1.0", lastmod: new Date().toISOString() },
@@ -48,11 +42,16 @@ ${u.lastmod ? `    <lastmod>${u.lastmod}</lastmod>\n` : ""}    <changefreq>${u.c
   .join("\n")}
 </urlset>`;
 
+  // Force headers without content-disposition — Vercel/Next sometimes injects
+  // `content-disposition: inline; filename="sitemap.xml"` which makes GSC
+  // show Type: Unknown. We explicitly override it.
   return new Response(xml, {
+    status: 200,
     headers: {
-      "Content-Type": "application/xml; charset=utf-8",
+      "Content-Type": "text/xml; charset=utf-8",
       "Cache-Control": "public, max-age=0, must-revalidate",
-      // Explicitly no content-disposition — Google prefers plain xml
+      "Content-Disposition": "inline",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

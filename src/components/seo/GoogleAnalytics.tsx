@@ -10,7 +10,7 @@ import Script from "next/script";
  * hits consolidated.
  */
 export function GoogleAnalytics() {
-  const id = process.env.NEXT_PUBLIC_GA_ID?.trim();
+  const id = (process.env.NEXT_PUBLIC_GA_ID?.trim() || "G-DELZZBKLTV").trim();
   if (!id) return null;
 
   return (

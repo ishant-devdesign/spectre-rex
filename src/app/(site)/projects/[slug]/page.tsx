@@ -46,9 +46,7 @@ export default async function ProjectArticlePage({
 }) {
   const { slug } = await params;
 
-  /* Null means one of: no such slug, still a draft, or classified. All three
-     are a 404 on purpose -- any other response confirms something is hidden
-     there. */
+  /* Null means no such slug or still a draft — both 404. */
   const entry = await getPublishedBySlug("project", slug);
   if (!entry) notFound();
 

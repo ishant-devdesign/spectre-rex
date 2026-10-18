@@ -151,11 +151,7 @@ export interface Signal {
   id: string;
   slug: string;
   title: string;
-  /** number of redaction blocks appended to the title */
-  blocks?: number;
   date: string;
-  dateRedacted?: boolean;
-  classified?: boolean;
   excerpt: string;
   body: string[];
 }
@@ -174,22 +170,7 @@ export const SIGNALS: Signal[] = [
       "More soon. Probably.",
     ],
   },
-  {
-    id: "005",
-    slug: "project-redacted",
-    title: "Project",
-    blocks: 5,
-    date: "██.██.26",
-    dateRedacted: true,
-    classified: true,
-    excerpt: "The contents of this transmission are classified.",
-    body: [
-      "The contents of this transmission are classified.",
-      "Development continues behind closed doors.",
-      "Until then, the dragon is working.",
-      "— ACCESS DENIED",
-    ],
-  },
+
 ];
 
 export const IDENTITY = [

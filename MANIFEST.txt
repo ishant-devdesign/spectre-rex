@@ -24,6 +24,7 @@ public/assets/img/concept-3.jpg
 public/assets/img/hero.jpg
 public/assets/img/studio.jpg
 public/assets/og.png
+public/sitemap-test.xml
 src/app/(admin)/admin/campaigns/page.tsx
 src/app/(admin)/admin/entries/[kind]/[id]/email/page.tsx
 src/app/(admin)/admin/entries/[kind]/[id]/page.tsx
@@ -54,7 +55,7 @@ src/app/icon.svg
 src/app/layout.tsx
 src/app/not-found.tsx
 src/app/robots.ts
-src/app/sitemap.ts
+src/app/sitemap.xml/route.ts
 src/components/admin/AdminHeader.tsx
 src/components/admin/CopyField.tsx
 src/components/admin/DeleteEntryButton.tsx

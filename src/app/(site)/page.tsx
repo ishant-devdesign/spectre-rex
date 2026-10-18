@@ -217,30 +217,19 @@ export default async function HomePage() {
           <div className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {featuredConcepts.map((entry, i) => (
               <Reveal key={entry.id} delay={i * 0.1}>
-                {entry.classified ? (
-                  /* No link: a classified slug 404s by design. */
+                <TransitionLink
+                  href={`/projects/${entry.slug}`}
+                  aria-label={entry.title || `Project ${entry.code}`}
+                  className="group block"
+                >
                   <ConceptCard
                     index={entry.code}
-                    image="/assets/img/concept-1.jpg"
-                    title={entry.title}
-                    caption="Clearance: dragon only"
+                    image={entry.heroImage ?? "/assets/img/concept-1.jpg"}
+                    title={entry.title || `Project ${entry.code}`}
+                    caption={entry.subtitle || "Concept exploration"}
                     dark
                   />
-                ) : (
-                  <TransitionLink
-                    href={`/projects/${entry.slug}`}
-                    aria-label={entry.title || `Project ${entry.code}`}
-                    className="group block"
-                  >
-                    <ConceptCard
-                      index={entry.code}
-                      image={entry.heroImage ?? "/assets/img/concept-1.jpg"}
-                      title={entry.title || `Project ${entry.code}`}
-                      caption={entry.subtitle || "Concept exploration"}
-                      dark
-                    />
-                  </TransitionLink>
-                )}
+                </TransitionLink>
               </Reveal>
             ))}
           </div>

@@ -1,13 +1,7 @@
 /**
- * Editor content model.
- *
- * Entries store an ordered array of typed blocks as JSONB. Keeping the
- * shape here means the editor, the renderer and the server actions all
- * agree on one definition — add a variant once and every consumer is
- * type-checked against it.
+ * Editor content model — classified block removed.
  */
 
-/** Paragraph scale. `lead` is the oversized opener under a headline. */
 export type ParagraphSize = "sm" | "base" | "lg" | "lead";
 
 export const PARAGRAPH_SIZES: { value: ParagraphSize; label: string }[] = [
@@ -23,7 +17,6 @@ export type BlockType =
   | "paragraph"
   | "list"
   | "table"
-  | "classified"
   | "reveal"
   | "image"
   | "imageGroup"
@@ -41,7 +34,6 @@ export type Block =
   | (Base & { type: "paragraph"; text: string; size?: ParagraphSize })
   | (Base & { type: "list"; ordered: boolean; items: string[] })
   | (Base & { type: "table"; headers: string[]; rows: string[][] })
-  | (Base & { type: "classified"; text: string; blocks: number })
   | (Base & { type: "reveal"; label: string; text: string })
   | (Base & { type: "image"; src: string; alt: string; caption: string })
   | (Base & {
@@ -59,7 +51,6 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   paragraph: "Paragraph",
   list: "List",
   table: "Table",
-  classified: "Classified",
   reveal: "Click to reveal",
   image: "Image",
   imageGroup: "Image group",
@@ -79,8 +70,6 @@ export function emptyBlock(type: BlockType): Block {
       return { id, type, ordered: false, items: [""] };
     case "table":
       return { id, type, headers: ["", ""], rows: [["", ""]] };
-    case "classified":
-      return { id, type, text: "", blocks: 8 };
     case "reveal":
       return { id, type, label: "Reveal", text: "" };
     case "image":
@@ -98,10 +87,6 @@ export function emptyBlock(type: BlockType): Block {
   }
 }
 
-/**
- * Blocks arrive from JSONB, so they are `unknown` until proven otherwise.
- * Anything malformed is dropped rather than crashing a page render.
- */
 export function parseBlocks(value: unknown): Block[] {
   if (!Array.isArray(value)) return [];
   const out: Block[] = [];
@@ -118,7 +103,6 @@ export function parseBlocks(value: unknown): Block[] {
   return out;
 }
 
-/** Plain-text summary, used for excerpts and list previews. */
 export function blocksToText(blocks: Block[], limit = 180): string {
   const first = blocks.find(
     (block) => block.type === "paragraph" && block.text.trim(),

@@ -9,7 +9,7 @@
 --
 --   Tables
 --     signals           transmissions / the public archive
---     projects          concept entries, published and classified
+--     projects          concept entries
 --     subscribers       mailing list
 -- =====================================================================
 
@@ -33,21 +33,14 @@ $$;
 -- =====================================================================
 create table if not exists public.signals (
   id                uuid primary key default gen_random_uuid(),
-  -- display code shown in the UI, e.g. '006'
   code              text        not null unique,
   slug              text        not null unique,
   title             text        not null,
   subtitle          text,
   excerpt           text,
-  -- editor content: ordered array of typed blocks (see src/lib/blocks.ts)
   blocks            jsonb       not null default '[]'::jsonb,
-  -- how many redaction squares follow the title (0 = none)
-  redaction_blocks  smallint    not null default 0 check (redaction_blocks >= 0),
-  -- literal label rendered in the list, e.g. '06.08.26'
   date_label        text,
-  date_redacted     boolean     not null default false,
   published_on      date,
-  classified        boolean     not null default false,
   status            text        not null default 'draft'
                       check (status in ('draft', 'published')),
   created_at        timestamptz not null default now(),
@@ -67,19 +60,15 @@ create trigger signals_set_updated_at
 -- =====================================================================
 create table if not exists public.projects (
   id                uuid primary key default gen_random_uuid(),
-  code              text        not null unique,        -- '01', '02', ...
+  code              text        not null unique,
   slug              text,
-  codename          text,                               -- null while redacted
+  codename          text,
   subtitle          text,
   summary           text,
-  -- path under /public, e.g. '/assets/img/concept-1.jpg'
-  image_path        text,
+  hero_image        text,
   blocks            jsonb       not null default '[]'::jsonb,
-  redaction_blocks  smallint    not null default 0 check (redaction_blocks >= 0),
-  -- lifecycle, distinct from the publish status below
   stage             text        not null default 'in_development'
                       check (stage in ('in_development', 'shipped', 'archived')),
-  classified        boolean     not null default true,
   status            text        not null default 'draft'
                       check (status in ('draft', 'published')),
   sort_order        integer     not null default 0,
@@ -98,25 +87,11 @@ create trigger projects_set_updated_at
   for each row execute function public.set_updated_at();
 
 -- =====================================================================
--- hero image
---
--- Added after the fact, so these are ALTERs rather than columns in the
--- CREATE above: the table already exists in deployed projects and
--- "create table if not exists" would skip a changed definition silently.
---
--- projects.image_path is folded into hero_image and dropped. Signals and
--- projects are the same entity with a different label; two names for one
--- concept is how the two code paths drifted apart in the first place.
+-- hero image migration (legacy image_path -> hero_image)
 -- =====================================================================
 alter table public.signals  add column if not exists hero_image text;
 alter table public.projects add column if not exists hero_image text;
 
--- The copy-then-drop has to be guarded and dynamic. A bare
---   update public.projects set hero_image = image_path
--- fails at PARSE time once the column is gone, so re-running the file after
--- a successful migration would error with 42703 -- "if exists" on the drop
--- does not help, because the statement above it never gets that far.
--- EXECUTE defers parsing until the branch is actually taken.
 do $$
 begin
   if exists (
@@ -136,39 +111,22 @@ end $$;
 
 -- =====================================================================
 -- broadcast_id
---
--- Set when publishing an entry creates a draft campaign in Resend. Its only
--- job is idempotency: without it, every save of an already-published entry
--- would create another draft, and an editor fixing three typos would leave
--- three campaigns behind.
 -- =====================================================================
 alter table public.signals  add column if not exists broadcast_id text;
 alter table public.projects add column if not exists broadcast_id text;
 
 -- =====================================================================
--- redaction columns — REMOVED
---
--- signals.redaction_blocks, signals.date_redacted and
--- projects.redaction_blocks stored how many blocks to draw over a title.
--- Redaction is computed now: src/lib/entries.ts scrambles the real text on
--- read, so the length is derived from the content rather than typed by hand
--- and kept in sync. A stored count could disagree with the string it was
--- meant to cover, and did.
+-- classified system — REMOVED
+-- Draft system is sufficient for visibility control.
 -- =====================================================================
+alter table public.signals  drop column if exists classified;
+alter table public.projects drop column if exists classified;
 alter table public.signals  drop column if exists redaction_blocks;
 alter table public.signals  drop column if exists date_redacted;
 alter table public.projects drop column if exists redaction_blocks;
 
 -- =====================================================================
 -- contact_messages — REMOVED
---
--- The contact form used to write here and an admin inbox read it back. Both
--- are gone: /api/contact now relays straight to the studio's Zoho group via
--- Resend, so the mail lands where the team already works instead of in a
--- table someone has to remember to open.
---
--- Dropped rather than left in place, because an unused table with an open
--- insert policy is a spam target with no one watching it.
 -- =====================================================================
 drop table if exists public.contact_messages;
 
@@ -184,20 +142,11 @@ create table if not exists public.subscribers (
   created_at    timestamptz not null default now()
 );
 
--- case-insensitive uniqueness without needing the citext extension
 create unique index if not exists subscribers_email_key
   on public.subscribers (lower(email));
 
 -- =====================================================================
 -- Row level security
---
--- Supabase exposes these tables over PostgREST with the anon key, so RLS
--- is not optional. Published rows are publicly readable; the two write
--- tables accept inserts but are never readable from the client.
---
--- The app's server code connects with the Postgres role from
--- DATABASE_URL, which owns these tables and therefore bypasses RLS —
--- that is what lets the admin panel read everything.
 -- =====================================================================
 alter table public.signals          enable row level security;
 alter table public.projects         enable row level security;

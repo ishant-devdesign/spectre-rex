@@ -45,7 +45,6 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   const [subtitle, setSubtitle] = useState(entry.subtitle);
   const [summary, setSummary] = useState(entry.summary);
   const [heroImage, setHeroImage] = useState(entry.heroImage);
-  const [classified, setClassified] = useState(entry.classified);
   const [status, setStatus] = useState(entry.status);
   const [blocks, setBlocks] = useState<Block[]>(entry.blocks);
   const [adding, setAdding] = useState(false);
@@ -84,7 +83,6 @@ export function EntryEditor({ entry }: { entry: Entry }) {
         code: entry.code,
         summary,
         heroImage,
-        classified,
         status: nextStatus,
         blocks,
       });
@@ -105,7 +103,7 @@ export function EntryEditor({ entry }: { entry: Entry }) {
     const result = await createCampaign(entry.kind, entry.id);
     setCampaign(
       !result
-        ? "Skipped: classified entries are not campaigned."
+        ? "No campaign to draft."
         : result.ok
           ? "Campaign drafted in Resend."
           : `Campaign not drafted: ${result.error}`,
@@ -141,11 +139,6 @@ export function EntryEditor({ entry }: { entry: Entry }) {
               />
             </div>
           </div>
-          {/* Code and slug are derived, not typed. The code counts up per
-              kind; the slug comes from the title, or from the code when the
-              entry is classified so the URL cannot leak the headline the
-              scrambler is hiding. Shown read-only because the author still
-              needs to know the resulting address. */}
           <div className="grid gap-4 md:grid-cols-[100px_1fr]">
             <div>
               <span className={LABEL}>Code</span>
@@ -156,10 +149,7 @@ export function EntryEditor({ entry }: { entry: Entry }) {
             <div>
               <span className={LABEL}>Slug (automatic)</span>
               <p className="truncate border border-paper/10 bg-white/[0.015] px-3.5 py-2.5 font-body text-[14.5px] text-paper/50">
-                /{entry.kind}s/
-                {classified
-                  ? `${entry.kind}-${entry.code}`
-                  : slugify(title) || `${entry.kind}-${entry.code}`}
+                /{entry.kind}s/{slugify(title) || `${entry.kind}-${entry.code}`}
               </p>
             </div>
           </div>
@@ -167,11 +157,6 @@ export function EntryEditor({ entry }: { entry: Entry }) {
           <div>
             <span className={LABEL}>Hero image</span>
             <ImageField value={heroImage} onChange={setHeroImage} />
-            <p className="mt-2 text-[12.5px] leading-relaxed text-paper/35">
-              Shown full width under the headline. Hidden from the public on
-              classified entries -- the listing draws its noise grid instead,
-              because a concept image gives away more than a title does.
-            </p>
           </div>
           <div>
             <label className={LABEL} htmlFor="summary">
@@ -280,18 +265,6 @@ export function EntryEditor({ entry }: { entry: Entry }) {
           >
             {status}
           </p>
-
-          <label className="mt-6 flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={classified}
-              onChange={(event) => setClassified(event.target.checked)}
-              className="h-4 w-4 accent-[#35AEE4]"
-            />
-            <span className="font-pixel text-[9.5px] tracking-[0.24em] text-paper/60 uppercase">
-              Classified
-            </span>
-          </label>
 
           <div className="mt-7 grid gap-2.5">
             <button
@@ -453,28 +426,6 @@ function BlockFields({
             })}
           </div>
           <FormattingHint />
-        </div>
-      );
-
-    case "classified":
-      return (
-        <div className="grid gap-3 md:grid-cols-[1fr_120px]">
-          <input
-            value={block.text}
-            onChange={(event) => update(block.id, { text: event.target.value })}
-            placeholder="Visible lead-in (optional)"
-            className={FIELD}
-          />
-          <input
-            type="number"
-            min={1}
-            max={40}
-            value={block.blocks}
-            onChange={(event) =>
-              update(block.id, { blocks: Number(event.target.value) || 1 })
-            }
-            className={FIELD}
-          />
         </div>
       );
 

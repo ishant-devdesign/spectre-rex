@@ -23,8 +23,7 @@ export default async function SignalsPage() {
       <PageHero eyebrow="Transmissions" lines={["Signals from", "the studio."]}>
           <Reveal delay={0.9} scroll={false} className="mt-10">
             <p className="max-w-xl text-base leading-relaxed text-paper/65 md:text-lg">
-              From inside the studio. Irregular, honest, occasionally
-              classified.
+              From inside the studio. Irregular, honest transmissions.
             </p>
           </Reveal>
       </PageHero>
@@ -34,12 +33,6 @@ export default async function SignalsPage() {
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 pt-14 pb-10 md:px-10">
           <Reveal>
             <PixelTag>Archive — {entries.length} entries</PixelTag>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="flex gap-3">
-              <Chip tone="ink">Public</Chip>
-              <Chip tone="solid">Classified</Chip>
-            </div>
           </Reveal>
         </div>
         <div className="border-b border-ink/10">

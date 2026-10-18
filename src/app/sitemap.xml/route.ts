@@ -18,14 +18,12 @@ export async function GET() {
     listPublished("signal"),
   ]);
 
-  const dynamicRoutes = [...projects, ...signals]
-    .filter((e) => !e.classified)
-    .map((entry) => ({
-      loc: `${SITE_URL}/${entry.kind === "project" ? "projects" : "signals"}/${entry.slug}`,
-      lastmod: entry.updatedAt ? new Date(entry.updatedAt).toISOString() : undefined,
-      changefreq: "monthly",
-      priority: "0.6",
-    }));
+  const dynamicRoutes = [...projects, ...signals].map((entry) => ({
+    loc: `${SITE_URL}/${entry.kind === "project" ? "projects" : "signals"}/${entry.slug}`,
+    lastmod: entry.updatedAt ? new Date(entry.updatedAt).toISOString() : undefined,
+    changefreq: "monthly",
+    priority: "0.6",
+  }));
 
   const all = [...staticRoutes, ...dynamicRoutes];
 
@@ -42,25 +40,14 @@ ${u.lastmod ? `    <lastmod>${u.lastmod}</lastmod>\n` : ""}    <changefreq>${u.c
   .join("\n")}
 </urlset>`;
 
-  // Force headers without content-disposition — Vercel/Next sometimes injects
-  // `content-disposition: inline; filename="sitemap.xml"` which makes GSC
-  // show Type: Unknown. We explicitly override it.
   return new Response(xml, {
-    status: 200,
     headers: {
       "Content-Type": "text/xml; charset=utf-8",
       "Cache-Control": "public, max-age=0, must-revalidate",
-      "Content-Disposition": "inline",
-      "X-Content-Type-Options": "nosniff",
     },
   });
 }
 
 function escapeXml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }

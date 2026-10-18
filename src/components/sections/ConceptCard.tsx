@@ -21,7 +21,7 @@ export function ConceptCard({
 }: {
   index: string;
   image: string;
-  /** Already redacted by the read layer when the entry is classified. */
+
   title: string;
   caption?: string;
   dark?: boolean;

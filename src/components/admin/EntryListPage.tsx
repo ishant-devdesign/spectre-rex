@@ -29,9 +29,7 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
             {label}
           </h1>
           <p className="mt-1.5 font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase">
-            {rows.length} total ·{" "}
-            {rows.filter((r) => r.status === "published").length} published ·{" "}
-            {rows.filter((r) => r.classified).length} classified
+            {rows.length} total · {rows.filter((r) => r.status === "published").length} published
           </p>
         </div>
         <form action={createEntry.bind(null, kind)}>
@@ -92,18 +90,6 @@ export async function EntryListPage({ kind }: { kind: EntryKind }) {
                   track, wrap on narrow viewports, and every control is
                   shrink-0 so nothing is compressed below its hit target. */}
               <div className="flex flex-wrap items-center gap-2 md:col-span-5 md:flex-nowrap md:justify-end">
-                {/* Classified is orthogonal to status -- a published entry can
-                    still be redacted and unopenable -- so it needs its own
-                    badge rather than replacing the status one. */}
-                {entry.classified ? (
-                  <span
-                    className="inline-flex shrink-0 items-center gap-1.5 border border-paper/35 px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] text-paper/70 uppercase"
-                    title="Redacted in public. Slug returns 404."
-                  >
-                    <Lock className="h-2.5 w-2.5" />
-                    Classified
-                  </span>
-                ) : null}
                 <span
                   className={`inline-flex shrink-0 items-center border px-2.5 py-1 font-pixel text-[9px] tracking-[0.24em] uppercase ${
                     entry.status === "published"

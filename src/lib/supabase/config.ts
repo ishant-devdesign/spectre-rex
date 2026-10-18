@@ -29,17 +29,16 @@ export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 export const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
+import { SITE_URL } from "@/lib/seo";
+
 /**
- * Absolute origin for auth redirects. Behind a reverse proxy the request
- * URL carries the upstream host, which would send users to an internal
- * address, so forwarded headers win when present.
+ * Absolute origin for auth redirects — always apex canonical.
+ * Using forwarded host caused www vs apex mismatch: magic link created on
+ * apex would redirect to www, then www 308s to apex / (losing /admin next).
  */
-export function siteOrigin(request: {
+export function siteOrigin(_request?: {
   headers: Headers;
   nextUrl: { origin: string };
 }): string {
-  const host = request.headers.get("x-forwarded-host");
-  if (!host) return request.nextUrl.origin;
-  const proto = request.headers.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}`;
+  return SITE_URL;
 }

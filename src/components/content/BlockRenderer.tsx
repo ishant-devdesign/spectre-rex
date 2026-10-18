@@ -106,18 +106,6 @@ function BlockView({ block }: { block: Block }) {
         </div>
       );
 
-    case "classified":
-      return (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-3 text-[16.5px] leading-relaxed text-ink/75">
-          {block.text ? (
-            <span>
-              <RichText text={block.text} />
-            </span>
-          ) : null}
-          <Redacted count={block.blocks} />
-        </p>
-      );
-
     case "reveal":
       return <RevealBlock label={block.label} text={block.text} />;
 

@@ -7,6 +7,7 @@ import { Nav } from "@/components/layout/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { Grain } from "@/components/ui/Grain";
 import { StructuredData } from "@/components/seo/StructuredData";
+import { CookieConsent } from "@/components/ui/CookieConsent";
 
 /**
  * Public site chrome. The intro flag is set here rather than in the root
@@ -36,6 +37,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
         </div>
       </PremiumLoaderProvider>
       <Grain />
+      <CookieConsent />
     </>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { ArrowUpRight } from "lucide-react";
 import { TransitionLink } from "@/components/transition/TransitionLink";
 import { Reveal, Words } from "@/components/motion/bits";
@@ -6,6 +8,7 @@ import { PixelTag } from "@/components/ui/chrome";
 import { LogoMark } from "@/components/svg/LogoMark";
 import { DragonMark } from "@/components/svg/DragonMark";
 import { CONTACTS } from "@/data/content";
+import { openCookieSettings } from "@/components/ui/CookieConsent";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -124,9 +127,17 @@ export function Footer() {
         {/* ------------ bottom bar ------------ */}
         <div className="border-t border-paper/10">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-6 md:px-10">
-            <p className="font-pixel text-[10px] tracking-[0.22em] text-paper/40 uppercase">
-              © 2026 Spectre Rex Studios Private Limited
-            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <p className="font-pixel text-[10px] tracking-[0.22em] text-paper/40 uppercase">
+                © 2026 Spectre Rex Studios Private Limited
+              </p>
+              <button
+                onClick={openCookieSettings}
+                className="font-pixel text-[10px] tracking-[0.22em] text-paper/40 uppercase underline decoration-paper/20 underline-offset-4 transition-colors hover:text-paper hover:decoration-paper/40"
+              >
+                Cookie settings
+              </button>
+            </div>
             <p className="font-pixel text-[10px] tracking-[0.22em] text-paper/40 uppercase">
               Gurugram, India · CIN U58203HR2026PTC147441
             </p>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getEntry, type EntryKind } from "../../../actions";
 import { EntryArticle } from "@/components/content/EntryArticle";
+import { PreviewFrame } from "@/components/admin/PreviewFrame";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function PreviewPage({
   };
 
   return (
-    <div className="min-h-svh bg-paper">
+    <div className="min-h-svh bg-night">
       <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-paper/12 bg-night px-5 py-3 md:px-10">
         <Link
           href={`/admin/entries/${entry.kind}/${entry.id}`}
@@ -41,11 +42,13 @@ export default async function PreviewPage({
           Back to editor
         </Link>
         <span className="font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase">
-          {entry.status}
+          {entry.status} · {entry.code} · preview
         </span>
       </div>
 
-      <EntryArticle entry={previewEntry} chrome={false} />
+      <PreviewFrame>
+        <EntryArticle entry={previewEntry} chrome={false} />
+      </PreviewFrame>
     </div>
   );
 }

@@ -1,7 +1,5 @@
 import Image from "next/image";
 import type { Block } from "@/lib/blocks";
-import { Redacted } from "@/components/ui/chrome";
-import { RevealBlock } from "@/components/content/RevealBlock";
 import { RichText } from "@/components/content/RichText";
 
 /**
@@ -106,8 +104,29 @@ function BlockView({ block }: { block: Block }) {
         </div>
       );
 
-    case "reveal":
-      return <RevealBlock label={block.label} text={block.text} />;
+    case "divider":
+      return (
+        <div className="flex items-center gap-4 py-2">
+          <span className="h-px flex-1 bg-ink/10" />
+          <span className="h-1.5 w-1.5 bg-spectre" />
+          <span className="h-px flex-1 bg-ink/10" />
+        </div>
+      );
+
+    case "callout":
+      return (
+        <div
+          className={`border-l-2 px-5 py-4 text-[15px] leading-relaxed ${
+            block.tone === "warning"
+              ? "border-amber-500 bg-amber-500/10 text-amber-900"
+              : block.tone === "success"
+                ? "border-emerald-500 bg-emerald-500/10 text-emerald-900"
+                : "border-spectre bg-ghost text-ink/80"
+          }`}
+        >
+          <RichText text={block.text} />
+        </div>
+      );
 
     case "image":
       return (

@@ -11,6 +11,7 @@ export async function GET() {
     { loc: `${SITE_URL}/signals`, changefreq: "weekly", priority: "0.9" },
     { loc: `${SITE_URL}/contact`, changefreq: "yearly", priority: "0.7" },
     { loc: `${SITE_URL}/press`, changefreq: "monthly", priority: "0.5" },
+    { loc: `${SITE_URL}/cookies`, changefreq: "yearly", priority: "0.3" },
   ];
 
   const [projects, signals] = await Promise.all([

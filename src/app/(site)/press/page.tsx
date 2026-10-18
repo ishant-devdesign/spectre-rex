@@ -157,13 +157,16 @@ export default function PressPage() {
         <div className="mt-12 flex flex-wrap items-end justify-between gap-10">
           <Reveal delay={0.9} scroll={false} className="max-w-xl">
             <p className="text-base leading-relaxed text-paper/65 md:text-lg">
-              Everything you need to write about the studio — logo files, key
-              art, boilerplate, and the facts. Download them, use them, credit
-              the dragon.
+              Everything you need to write about the studio — logo files, key art, boilerplate, and
+              the facts. Download them, use them, credit the dragon.
             </p>
           </Reveal>
-          <Reveal delay={1.05} scroll={false}>
-            <Button href={`mailto:${PRESS_EMAIL}`} variant="light" external>
+          <Reveal delay={1.05} scroll={false} className="flex flex-wrap gap-3">
+            <Button href="/api/press-kit" variant="light" external>
+              <Download className="h-4 w-4" />
+              Download all (ZIP)
+            </Button>
+            <Button href={`mailto:${PRESS_EMAIL}`} variant="outline-dark" external>
               <Mail className="h-4 w-4" />
               {PRESS_EMAIL}
             </Button>

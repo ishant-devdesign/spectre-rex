@@ -56,5 +56,19 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const templates = pgTable("templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(), // 'signal' | 'project' | 'email'
+  title: text("title"),
+  subtitle: text("subtitle"),
+  summary: text("summary"),
+  heroImage: text("hero_image"),
+  blocks: jsonb("blocks").notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type SignalRow = typeof signals.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
+export type TemplateRow = typeof templates.$inferSelect;

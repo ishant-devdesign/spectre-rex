@@ -2,11 +2,12 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { LogoMark } from "@/components/svg/LogoMark";
 
-export type AdminTab = "projects" | "signals" | "campaigns";
+export type AdminTab = "projects" | "signals" | "campaigns" | "templates";
 
 const TABS: { href: string; label: string; key: AdminTab }[] = [
   { href: "/admin/projects", label: "Projects", key: "projects" },
   { href: "/admin/signals", label: "Signals", key: "signals" },
+  { href: "/admin/templates", label: "Templates", key: "templates" },
   { href: "/admin/campaigns", label: "Campaigns", key: "campaigns" },
 ];
 

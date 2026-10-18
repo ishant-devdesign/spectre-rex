@@ -1,29 +1,20 @@
--- SUPABASE - CLEAN CLASSIFIED SYSTEM
--- Run in Supabase Dashboard -> SQL Editor, in order
-
--- 1. Delete classified entries (they are of no use, draft system is enough)
+-- SUPABASE CLEANUP - Run in SQL Editor
 DELETE FROM public.projects WHERE classified = true;
 DELETE FROM public.signals WHERE classified = true;
-
--- 2. Drop classified and old redaction columns (if they exist)
 ALTER TABLE public.projects DROP COLUMN IF EXISTS classified;
 ALTER TABLE public.signals DROP COLUMN IF EXISTS classified;
 ALTER TABLE public.projects DROP COLUMN IF EXISTS redaction_blocks;
 ALTER TABLE public.signals DROP COLUMN IF EXISTS redaction_blocks;
 ALTER TABLE public.signals DROP COLUMN IF EXISTS date_redacted;
-
--- 3. Verify - should return 0 rows for classified columns
-SELECT column_name, table_name 
-FROM information_schema.columns 
-WHERE table_name IN ('projects','signals') 
-AND column_name IN ('classified','redaction_blocks','date_redacted');
-
--- 4. Verify counts - should be 4 projects, 2 signals published (or your current)
-SELECT code, slug, status FROM public.projects ORDER BY code;
-SELECT code, slug, status FROM public.signals ORDER BY code;
-
--- 5. Optional: If you want to re-seed clean data (will upsert, not duplicate)
--- Run supabase/seed.sql content after this, or just keep current data
--- The seed now has only 4 projects + 2 signals, no classified
-
--- 6. For cookie consent, no DB change needed
+-- Create templates table (from schema.sql)
+create table if not exists public.templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  kind text not null check (kind in ('signal','project','email')),
+  title text, subtitle text, summary text, hero_image text,
+  blocks jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+-- RLS for templates
+alter table public.templates enable row level security;

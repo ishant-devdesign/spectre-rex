@@ -146,11 +146,33 @@ create unique index if not exists subscribers_email_key
   on public.subscribers (lower(email));
 
 -- =====================================================================
+-- templates — reusable content templates for signals, projects, emails
+-- =====================================================================
+create table if not exists public.templates (
+  id            uuid primary key default gen_random_uuid(),
+  name          text        not null,
+  kind          text        not null check (kind in ('signal','project','email')),
+  title         text,
+  subtitle      text,
+  summary       text,
+  hero_image    text,
+  blocks        jsonb       not null default '[]'::jsonb,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+drop trigger if exists templates_set_updated_at on public.templates;
+create trigger templates_set_updated_at
+  before update on public.templates
+  for each row execute function public.set_updated_at();
+
+-- =====================================================================
 -- Row level security
 -- =====================================================================
 alter table public.signals          enable row level security;
 alter table public.projects         enable row level security;
 alter table public.subscribers      enable row level security;
+alter table public.templates        enable row level security;
 
 drop policy if exists "published signals are public" on public.signals;
 create policy "published signals are public"
@@ -166,3 +188,5 @@ drop policy if exists "anyone may subscribe" on public.subscribers;
 create policy "anyone may subscribe"
   on public.subscribers for insert
   with check (true);
+
+-- templates are admin-only, no public policies (service role bypasses RLS via ownership)

@@ -17,12 +17,13 @@ export type BlockType =
   | "paragraph"
   | "list"
   | "table"
-  | "reveal"
   | "image"
   | "imageGroup"
   | "video"
   | "code"
-  | "quote";
+  | "quote"
+  | "divider"
+  | "callout";
 
 interface Base {
   id: string;
@@ -34,7 +35,6 @@ export type Block =
   | (Base & { type: "paragraph"; text: string; size?: ParagraphSize })
   | (Base & { type: "list"; ordered: boolean; items: string[] })
   | (Base & { type: "table"; headers: string[]; rows: string[][] })
-  | (Base & { type: "reveal"; label: string; text: string })
   | (Base & { type: "image"; src: string; alt: string; caption: string })
   | (Base & {
       type: "imageGroup";
@@ -43,7 +43,9 @@ export type Block =
     })
   | (Base & { type: "video"; url: string; caption: string })
   | (Base & { type: "code"; text: string; label: string })
-  | (Base & { type: "quote"; text: string; attribution: string });
+  | (Base & { type: "quote"; text: string; attribution: string })
+  | (Base & { type: "divider" })
+  | (Base & { type: "callout"; text: string; tone: "info" | "warning" | "success" });
 
 export const BLOCK_LABELS: Record<BlockType, string> = {
   title: "Title",
@@ -51,12 +53,13 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   paragraph: "Paragraph",
   list: "List",
   table: "Table",
-  reveal: "Click to reveal",
   image: "Image",
   imageGroup: "Image group",
   video: "Video",
   code: "Highlighted",
   quote: "Quote",
+  divider: "Divider",
+  callout: "Callout",
 };
 
 export function newId(): string {
@@ -70,8 +73,6 @@ export function emptyBlock(type: BlockType): Block {
       return { id, type, ordered: false, items: [""] };
     case "table":
       return { id, type, headers: ["", ""], rows: [["", ""]] };
-    case "reveal":
-      return { id, type, label: "Reveal", text: "" };
     case "image":
       return { id, type, src: "", alt: "", caption: "" };
     case "imageGroup":
@@ -82,6 +83,10 @@ export function emptyBlock(type: BlockType): Block {
       return { id, type, text: "", label: "" };
     case "quote":
       return { id, type, text: "", attribution: "" };
+    case "divider":
+      return { id, type } as Block;
+    case "callout":
+      return { id, type, text: "", tone: "info" } as Block;
     default:
       return { id, type, text: "" } as Block;
   }

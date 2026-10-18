@@ -6,11 +6,7 @@ import { useEffect, useState } from "react";
  * Pixel loader with 3D look — full width + full height, no layout jump.
  * Covers entire admin viewport, centered, so content doesn't shift when real data loads.
  */
-export function PixelLoader({
-  label = "Loading transmission...",
-}: {
-  label?: string;
-}) {
+export function PixelLoader({ label = "Loading transmission..." }: { label?: string }) {
   const [frame, setFrame] = useState(0);
 
   useEffect(() => {
@@ -58,9 +54,7 @@ export function PixelLoader({
                   } transition-colors duration-300`}
                   style={{
                     transform: "translateZ(6px)",
-                    boxShadow: c.active
-                      ? "0 0 12px rgba(53,174,228,0.5)"
-                      : "none",
+                    boxShadow: c.active ? "0 0 12px rgba(53,174,228,0.5)" : "none",
                   }}
                 />
                 <span

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -47,7 +47,74 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   const [heroImage, setHeroImage] = useState(entry.heroImage);
   const [status, setStatus] = useState(entry.status);
   const [blocks, setBlocks] = useState<Block[]>(entry.blocks);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [templateLoading, setTemplateLoading] = useState(false);
+
+  // Word count + reading time + SEO preview
+  const allText = [title, subtitle, summary, ...blocks.map((b) => ("text" in b ? (b as any).text : "") + ("items" in b ? (b as any).items?.join(" ") : "") + ("caption" in b ? (b as any).caption : ""))].join(" ");
+  const words = allText.trim().split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.ceil(words / 200));
+  const seoTitle = title ? `${title} — Spectre Rex Studios` : "Spectre Rex Studios";
+  const seoDesc = summary || subtitle || "";
+  const canonicalUrl = `https://spectrerex.com/${entry.kind}s/${entry.slug || "your-slug"}`;
+
   const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/templates?kind=${entry.kind}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setTemplates(data);
+      })
+      .catch(() => {});
+  }, [entry.kind]);
+
+  async function loadTemplate(id: string) {
+    if (!id) return;
+    setTemplateLoading(true);
+    try {
+      const res = await fetch(`/api/templates/${id}`);
+      const tpl = await res.json();
+      if (tpl) {
+        if (tpl.title) setTitle(tpl.title);
+        if (tpl.subtitle) setSubtitle(tpl.subtitle);
+        if (tpl.summary) setSummary(tpl.summary);
+        if (tpl.heroImage) setHeroImage(tpl.heroImage);
+        if (Array.isArray(tpl.blocks) && tpl.blocks.length > 0) {
+          setBlocks(tpl.blocks);
+        }
+      }
+    } catch {}
+    setTemplateLoading(false);
+  }
+
+  async function saveAsTemplate() {
+    const name = prompt(`Save as template for ${entry.kind}?`, `${title || entry.code} template`);
+    if (!name) return;
+    try {
+      await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          kind: entry.kind,
+          title,
+          subtitle,
+          summary,
+          heroImage,
+          blocks,
+        }),
+      });
+      alert('Template saved');
+      fetch(`/api/templates?kind=${entry.kind}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (Array.isArray(data)) setTemplates(data);
+        });
+    } catch {
+      alert('Failed to save template');
+    }
+  }
   const [saved, setSaved] = useState<string | null>(null);
   /* Campaign drafting used to log and vanish; a failure was indistinguish-
      able from the feature not running at all. The outcome is surfaced. */
@@ -209,6 +276,41 @@ export function EntryEditor({ entry }: { entry: Entry }) {
           ))}
         </ul>
 
+        {/* -------------------------- templates ------------------------ */}
+        <div className="mt-8 border border-paper/12 bg-white/[0.02] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase">
+              Templates · {entry.kind}
+            </span>
+            <button
+              type="button"
+              onClick={saveAsTemplate}
+              className="border border-paper/20 px-3 py-1.5 font-pixel text-[9px] tracking-[0.2em] text-paper/60 uppercase hover:border-spectre hover:text-spectre"
+            >
+              Save as template
+            </button>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <select
+              onChange={(e) => loadTemplate(e.target.value)}
+              defaultValue=""
+              className="w-full border border-paper/20 bg-night px-3 py-2.5 font-pixel text-[10px] tracking-[0.2em] text-paper/70 uppercase"
+              disabled={templateLoading}
+            >
+              <option value="">Load template…</option>
+              {templates.map((tpl: any) => (
+                <option key={tpl.id} value={tpl.id}>
+                  {tpl.name} · {tpl.blocks?.length ?? 0} blocks
+                </option>
+              ))}
+            </select>
+            {templateLoading ? <span className="font-pixel text-[9px] text-paper/40 uppercase animate-pulse">Loading…</span> : null}
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-paper/30">
+            Save current blocks as template, or load a saved template. Loading replaces title, subtitle, summary, hero and blocks.
+          </p>
+        </div>
+
         {/* ---------------------------- add block ---------------------- */}
         <div className="mt-5">
           {adding ? (
@@ -265,6 +367,35 @@ export function EntryEditor({ entry }: { entry: Entry }) {
           >
             {status}
           </p>
+
+          {/* Word count + reading time */}
+          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-paper/10 pt-5">
+            <div>
+              <p className="font-pixel text-[9px] tracking-[0.24em] text-paper/30 uppercase">Words</p>
+              <p className="mt-1 font-display text-[1.1rem] font-bold text-paper">{words}</p>
+            </div>
+            <div>
+              <p className="font-pixel text-[9px] tracking-[0.24em] text-paper/30 uppercase">Reading</p>
+              <p className="mt-1 font-display text-[1.1rem] font-bold text-paper">{readingTime}m</p>
+            </div>
+            <div className="col-span-2">
+              <p className="font-pixel text-[9px] tracking-[0.24em] text-paper/30 uppercase">Blocks</p>
+              <p className="mt-1 font-display text-[1.1rem] font-bold text-paper">{blocks.length}</p>
+            </div>
+          </div>
+
+          {/* SEO preview */}
+          <div className="mt-6 border-t border-paper/10 pt-5">
+            <p className="font-pixel text-[9px] tracking-[0.28em] text-paper/40 uppercase">SEO preview</p>
+            <div className="mt-3 rounded border border-paper/10 bg-[#0f0f0f] p-3">
+              <p className="truncate text-[12px] leading-none text-[#4a8d3b]">{canonicalUrl}</p>
+              <p className="mt-1.5 line-clamp-2 text-[15px] leading-tight text-[#6b8cff] hover:underline">{seoTitle}</p>
+              <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-paper/60">{seoDesc || "No description yet — add summary."}</p>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-paper/30">
+              Title {seoTitle.length} chars {seoTitle.length > 60 ? "· too long" : "· ok"} · Desc {seoDesc.length} chars
+            </p>
+          </div>
 
           <div className="mt-7 grid gap-2.5">
             <button
@@ -429,22 +560,37 @@ function BlockFields({
         </div>
       );
 
-    case "reveal":
+    case "divider":
+      return (
+        <p className="font-pixel text-[9px] tracking-[0.24em] text-paper/30 uppercase">
+          Divider — no settings
+        </p>
+      );
+
+    case "callout":
       return (
         <div className="grid gap-3">
-          <input
-            value={block.label}
-            onChange={(event) => update(block.id, { label: event.target.value })}
-            placeholder="Button label"
-            className={FIELD}
-          />
           <textarea
             rows={3}
             value={block.text}
             onChange={(event) => update(block.id, { text: event.target.value })}
-            placeholder="Hidden text"
+            placeholder="Callout text — supports <b> <i> <reveal> inline"
             className={`${FIELD} resize-y`}
           />
+          <div className="flex gap-2">
+            {(["info", "warning", "success"] as const).map((tone) => (
+              <button
+                key={tone}
+                type="button"
+                onClick={() => update(block.id, { tone })}
+                className={`border px-3 py-1.5 font-pixel text-[9px] tracking-[0.2em] uppercase ${
+                  block.tone === tone ? "border-spectre bg-spectre text-night" : "border-paper/20 text-paper/50"
+                }`}
+              >
+                {tone}
+              </button>
+            ))}
+          </div>
         </div>
       );
 

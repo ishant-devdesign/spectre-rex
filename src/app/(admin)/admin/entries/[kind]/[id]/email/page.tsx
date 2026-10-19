@@ -36,6 +36,7 @@ export default async function EntryEmailPage({
       heroImage: entry.heroImage || null,
       blocks: entry.blocks,
       dateLabel: "",
+      featured: false,
       updatedAt: entry.updatedAt,
     },
     more,

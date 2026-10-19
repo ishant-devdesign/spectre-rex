@@ -21,6 +21,7 @@ export interface PublicEntry {
   heroImage: string | null;
   blocks: Block[];
   dateLabel: string;
+  featured: boolean;
   updatedAt: Date;
 }
 
@@ -43,6 +44,7 @@ function fromSignal(row: SignalRow): RawEntry {
     heroImage: row.heroImage ?? null,
     blocks: parseBlocks(row.blocks),
     dateLabel: row.dateLabel ?? "",
+    featured: (row as any).featured ?? false,
     updatedAt: row.updatedAt,
   };
 }
@@ -59,6 +61,7 @@ function fromProject(row: ProjectRow): RawEntry {
     heroImage: row.heroImage ?? null,
     blocks: parseBlocks(row.blocks),
     dateLabel: "",
+    featured: (row as any).featured ?? false,
     updatedAt: row.updatedAt,
   };
 }

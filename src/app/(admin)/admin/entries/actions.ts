@@ -31,6 +31,7 @@ export interface Entry {
   heroImage: string;
   blocks: Block[];
   status: "draft" | "published";
+  featured: boolean;
   broadcastId: string | null;
   updatedAt: Date;
 }
@@ -66,6 +67,7 @@ export async function listEntries(): Promise<{
         heroImage: row.heroImage ?? "",
         blocks: parseBlocks(row.blocks),
         status: row.status === "published" ? ("published" as const) : ("draft" as const),
+        featured: (row as any).featured ?? false,
         broadcastId: row.broadcastId ?? null,
         updatedAt: row.updatedAt,
       })),
@@ -80,6 +82,7 @@ export async function listEntries(): Promise<{
         heroImage: row.heroImage ?? "",
         blocks: parseBlocks(row.blocks),
         status: row.status === "published" ? ("published" as const) : ("draft" as const),
+        featured: (row as any).featured ?? false,
         broadcastId: row.broadcastId ?? null,
         updatedAt: row.updatedAt,
       })),
@@ -113,6 +116,7 @@ export async function getEntry(
       heroImage: row.heroImage ?? "",
       blocks: parseBlocks(row.blocks),
       status: row.status === "published" ? "published" : "draft",
+      featured: (row as any).featured ?? false,
       broadcastId: row.broadcastId ?? null,
       updatedAt: row.updatedAt,
     };
@@ -130,6 +134,7 @@ export async function getEntry(
     heroImage: row.heroImage ?? "",
     blocks: parseBlocks(row.blocks),
     status: row.status === "published" ? "published" : "draft",
+    featured: (row as any).featured ?? false,
     broadcastId: row.broadcastId ?? null,
     updatedAt: row.updatedAt,
   };
@@ -222,6 +227,7 @@ async function draftCampaign(
         heroImage: entry.heroImage || null,
         blocks: entry.blocks,
         dateLabel: "",
+        featured: entry.featured ?? false,
         updatedAt: entry.updatedAt,
       },
       [...projs, ...sigs].filter((m) => m.id !== entry.id),
@@ -326,6 +332,35 @@ export async function saveEntry(input: SaveInput) {
   const campaign = goingLive ? await draftCampaign(input.kind, input.id) : null;
 
   return { ok: true as const, slug, campaign };
+}
+
+export async function toggleFeatured(kind: EntryKind, id: string) {
+  await assertAdmin();
+  const db = getDb();
+  const current = await getEntry(kind, id);
+  if (!current) throw new Error("Not found");
+  const willFeature = !current.featured;
+
+  // Only one featured per kind — clear others if starring
+  if (willFeature) {
+    if (kind === "signal") {
+      await db.update(signals).set({ featured: false }).where(eq(signals.featured, true));
+    } else {
+      await db.update(projects).set({ featured: false }).where(eq(projects.featured, true));
+    }
+  }
+
+  if (kind === "signal") {
+    await db.update(signals).set({ featured: willFeature, updatedAt: new Date() }).where(eq(signals.id, id));
+  } else {
+    await db.update(projects).set({ featured: willFeature, updatedAt: new Date() }).where(eq(projects.id, id));
+  }
+
+  revalidatePath("/admin/entries");
+  revalidatePath(`/admin/${kind}s`);
+  revalidatePath(`/${kind}s`);
+  revalidatePath("/");
+  return { ok: true, featured: willFeature };
 }
 
 export async function deleteEntry(kind: EntryKind, id: string) {

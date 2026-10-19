@@ -1,5 +1,6 @@
 /**
- * Editor content model — classified block removed.
+ * Editor content model — website-only, no classified.
+ * Added: divider, callout, embed, button, stats, gallery
  */
 
 export type ParagraphSize = "sm" | "base" | "lg" | "lead";
@@ -23,7 +24,11 @@ export type BlockType =
   | "code"
   | "quote"
   | "divider"
-  | "callout";
+  | "callout"
+  | "embed"
+  | "button"
+  | "stats"
+  | "gallery";
 
 interface Base {
   id: string;
@@ -45,7 +50,11 @@ export type Block =
   | (Base & { type: "code"; text: string; label: string })
   | (Base & { type: "quote"; text: string; attribution: string })
   | (Base & { type: "divider" })
-  | (Base & { type: "callout"; text: string; tone: "info" | "warning" | "success" });
+  | (Base & { type: "callout"; text: string; tone: "info" | "warning" | "success" })
+  | (Base & { type: "embed"; url: string; caption: string })
+  | (Base & { type: "button"; label: string; href: string; variant: "light" | "dark" | "outline" })
+  | (Base & { type: "stats"; items: { label: string; value: string }[] })
+  | (Base & { type: "gallery"; images: { src: string; alt: string; caption?: string }[] });
 
 export const BLOCK_LABELS: Record<BlockType, string> = {
   title: "Title",
@@ -60,6 +69,10 @@ export const BLOCK_LABELS: Record<BlockType, string> = {
   quote: "Quote",
   divider: "Divider",
   callout: "Callout",
+  embed: "Embed",
+  button: "Button",
+  stats: "Stats",
+  gallery: "Gallery",
 };
 
 export function newId(): string {
@@ -87,6 +100,14 @@ export function emptyBlock(type: BlockType): Block {
       return { id, type } as Block;
     case "callout":
       return { id, type, text: "", tone: "info" } as Block;
+    case "embed":
+      return { id, type, url: "", caption: "" } as Block;
+    case "button":
+      return { id, type, label: "Click me", href: "/", variant: "light" } as Block;
+    case "stats":
+      return { id, type, items: [{ label: "Label", value: "100" }] } as Block;
+    case "gallery":
+      return { id, type, images: [{ src: "", alt: "", caption: "" }] } as Block;
     default:
       return { id, type, text: "" } as Block;
   }

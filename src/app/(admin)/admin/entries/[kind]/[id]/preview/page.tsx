@@ -28,6 +28,7 @@ export default async function PreviewPage({
     heroImage: entry.heroImage || null,
     blocks: entry.blocks,
     dateLabel: "",
+    featured: (entry as any).featured ?? false,
     updatedAt: entry.updatedAt,
   };
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Star } from "lucide-react";
 import { listPublished } from "@/lib/entries";
 import { Reveal, Words } from "@/components/motion/bits";
 import { PixelTag, Chip } from "@/components/ui/chrome";
@@ -18,6 +19,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
   const entries = await listPublished("project");
+  const featured = entries.find((e) => e.featured) ?? null;
+  const rest = entries.filter((e) => !e.featured);
 
   return (
     <>
@@ -32,16 +35,55 @@ export default async function ProjectsPage() {
           <Reveal delay={1.05} scroll={false}>
             <div className="flex gap-3">
               <Chip tone="paper">Projects — {String(entries.length).padStart(2, "0")}</Chip>
+              {featured ? <Chip tone="spectre">Featured · {featured.code}</Chip> : null}
             </div>
           </Reveal>
         </div>
       </PageHero>
 
+      {featured ? (
+        <section className="border-b border-ink/10 bg-ghost">
+          <div className="mx-auto max-w-[1440px] px-5 py-14 md:px-10 md:py-20">
+            <Reveal>
+              <PixelTag>Featured project</PixelTag>
+            </Reveal>
+            <TransitionLink href={`/projects/${featured.slug}`} className="group mt-8 grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+              <div className="relative aspect-[16/10] overflow-hidden bg-night">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={featured.heroImage ?? "/assets/img/concept-1.jpg"}
+                  alt={featured.title}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                />
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 border border-amber-300 bg-amber-400 px-2.5 py-1 font-pixel text-[10px] tracking-[0.24em] text-night uppercase">
+                  <Star className="h-3 w-3 fill-night" /> Featured
+                </span>
+              </div>
+              <div>
+                <p className="font-pixel text-[11px] tracking-[0.3em] text-ink/50 uppercase">
+                  PROJECT {featured.code}
+                </p>
+                <h2 className="mt-3 font-display text-[2.2rem] font-extrabold leading-[0.95] tracking-[-0.03em] md:text-[3rem]">
+                  {featured.title}
+                </h2>
+                {featured.subtitle ? (
+                  <p className="mt-3 text-[17px] font-semibold leading-snug text-ink/60">{featured.subtitle}</p>
+                ) : null}
+                <p className="mt-4 max-w-[50ch] text-[15px] leading-relaxed text-ink/60">{featured.summary}</p>
+                <span className="mt-6 inline-flex items-center gap-2 font-pixel text-[10px] tracking-[0.24em] text-ink/50 uppercase group-hover:text-spectre">
+                  Open project <span aria-hidden>→</span>
+                </span>
+              </div>
+            </TransitionLink>
+          </div>
+        </section>
+      ) : null}
+
       <section className="bg-paper text-ink">
         <div className="mx-auto max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <Reveal>
-              <PixelTag>Projects / 01</PixelTag>
+              <PixelTag>{featured ? "More projects / 02" : "Projects / 01"}</PixelTag>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="font-pixel text-[10px] tracking-[0.3em] text-ink/45 uppercase">
@@ -50,7 +92,7 @@ export default async function ProjectsPage() {
             </Reveal>
           </div>
           <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-            {entries.map((entry, i) => (
+            {rest.map((entry, i) => (
               <Reveal key={entry.id} delay={i * 0.1}>
                 <TransitionLink
                   href={`/projects/${entry.slug}`}
@@ -67,7 +109,7 @@ export default async function ProjectsPage() {
                 </TransitionLink>
               </Reveal>
             ))}
-            {entries.length === 0 ? (
+            {rest.length === 0 && !featured ? (
               <p className="col-span-full border border-ink/10 bg-ink/[0.02] px-6 py-14 text-center text-[15px] text-ink/45">
                 No projects published yet.
               </p>
@@ -85,21 +127,9 @@ export default async function ProjectsPage() {
               <span aria-hidden className="absolute top-0 right-0 h-10 w-10 border-t-2 border-r-2 border-spectre/50" />
               <span aria-hidden className="absolute bottom-0 left-0 h-10 w-10 border-b-2 border-l-2 border-spectre/50" />
               <span aria-hidden className="absolute right-0 bottom-0 h-10 w-10 border-r-2 border-b-2 border-spectre/50" />
-              <span aria-hidden className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-paper/15 to-transparent" />
-              <span aria-hidden className="absolute inset-x-10 bottom-0 h-px bg-gradient-to-r from-transparent via-paper/15 to-transparent" />
-
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-night px-3 font-pixel text-[9px] tracking-[0.34em] text-paper/45 uppercase">
-                Containment 01
-              </span>
-
               <PixelEgg />
-
-              <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-night px-3 font-pixel text-[9px] tracking-[0.34em] text-paper/35 uppercase">
-                Do not poke
-              </span>
             </div>
           </Reveal>
-
           <div>
             <Reveal>
               <PixelTag tone="paper">The incubator</PixelTag>
@@ -110,12 +140,6 @@ export default async function ProjectsPage() {
               accent={["hatching"]}
               className="mt-6 font-display text-[2.6rem] leading-[0.98] font-extrabold tracking-[-0.035em] md:text-[4.4rem]"
             />
-            <Reveal delay={0.08}>
-              <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-paper/55">
-                One egg. No release date. It has survived three office moves, two power cuts and one
-                very determined intern.
-              </p>
-            </Reveal>
           </div>
         </div>
       </section>

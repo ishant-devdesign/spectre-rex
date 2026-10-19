@@ -128,6 +128,78 @@ function BlockView({ block }: { block: Block }) {
         </div>
       );
 
+    case "embed":
+      return (
+        <figure>
+          <div className="relative aspect-video overflow-hidden bg-night">
+            {block.url ? (
+              <iframe
+                src={toEmbed(block.url)}
+                title={block.caption || "Embed"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 h-full w-full"
+              />
+            ) : null}
+          </div>
+          {block.caption ? (
+            <figcaption className="mt-3 font-pixel text-[10px] tracking-[0.26em] text-ink/40 uppercase">
+              {block.caption}
+            </figcaption>
+          ) : null}
+        </figure>
+      );
+
+    case "button":
+      return (
+        <div className="py-2">
+          <a
+            href={block.href || "#"}
+            className={`inline-flex items-center gap-2 px-6 py-3 font-pixel text-[11px] tracking-[0.24em] uppercase transition-colors ${
+              block.variant === "dark"
+                ? "bg-night text-paper hover:bg-ink"
+                : block.variant === "outline"
+                  ? "border border-ink/20 bg-transparent text-ink hover:border-ink hover:bg-ink hover:text-paper"
+                  : "bg-paper text-night hover:bg-spectre"
+            }`}
+          >
+            {block.label}
+          </a>
+        </div>
+      );
+
+    case "stats":
+      return (
+        <div className="grid gap-px border border-ink/12 bg-ink/12 sm:grid-cols-3">
+          {block.items.map((item, i) => (
+            <div key={i} className="bg-paper px-6 py-8">
+              <p className="font-display text-[2rem] font-extrabold leading-none tracking-[-0.02em]">{item.value}</p>
+              <p className="mt-2 font-pixel text-[10px] tracking-[0.24em] text-ink/50 uppercase">{item.label}</p>
+            </div>
+          ))}
+        </div>
+      );
+
+    case "gallery":
+      return (
+        <figure>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {block.images
+              .filter((img) => img.src)
+              .map((img, i) => (
+                <div key={i} className="relative aspect-[4/3] overflow-hidden bg-night">
+                  <Image src={img.src} alt={img.alt} fill sizes="(min-width:640px) 50vw, 100vw" className="object-cover" />
+                  {img.caption ? (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-night/80 to-transparent p-3">
+                      <p className="font-pixel text-[9px] tracking-[0.2em] text-paper/70 uppercase">{img.caption}</p>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+          </div>
+        </figure>
+      );
+
     case "image":
       return (
         <figure>

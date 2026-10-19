@@ -38,15 +38,21 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  /* Same source as /projects and /signals. The home page used to render a
-     hardcoded copy, so an entry edited in the panel changed on the archive
-     pages and not here. */
   const [concepts, signals] = await Promise.all([
     listPublished("project"),
     listPublished("signal"),
   ]);
-  const featuredConcepts = concepts.slice(0, 3);
-  const featuredSignals = signals.slice(0, 3);
+  // Featured first, then rest
+  const featuredProject = concepts.find((c) => c.featured) ?? null;
+  const featuredSignal = signals.find((s) => s.featured) ?? null;
+  const featuredConcepts = [
+    ...(featuredProject ? [featuredProject] : []),
+    ...concepts.filter((c) => !c.featured),
+  ].slice(0, 3);
+  const featuredSignals = [
+    ...(featuredSignal ? [featuredSignal] : []),
+    ...signals.filter((s) => !s.featured),
+  ].slice(0, 3);
 
   return (
     <>

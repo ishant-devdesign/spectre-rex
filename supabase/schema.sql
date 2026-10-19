@@ -116,6 +116,18 @@ alter table public.signals  add column if not exists broadcast_id text;
 alter table public.projects add column if not exists broadcast_id text;
 
 -- =====================================================================
+-- featured — single highlighted entry per kind
+-- =====================================================================
+alter table public.signals  add column if not exists featured boolean not null default false;
+alter table public.projects add column if not exists featured boolean not null default false;
+
+-- Only one featured per kind (partial unique index)
+create unique index if not exists signals_featured_unique
+  on public.signals (featured) where featured = true;
+create unique index if not exists projects_featured_unique
+  on public.projects (featured) where featured = true;
+
+-- =====================================================================
 -- classified system — REMOVED
 -- Draft system is sufficient for visibility control.
 -- =====================================================================

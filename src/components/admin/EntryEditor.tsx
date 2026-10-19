@@ -7,6 +7,7 @@ import {
   Eye,
   Plus,
   Save,
+  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -46,6 +47,7 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   const [summary, setSummary] = useState(entry.summary);
   const [heroImage, setHeroImage] = useState(entry.heroImage);
   const [status, setStatus] = useState(entry.status);
+  const [featured, setFeatured] = useState((entry as any).featured ?? false);
   const [blocks, setBlocks] = useState<Block[]>(entry.blocks);
   const [templates, setTemplates] = useState<any[]>([]);
   const [templateLoading, setTemplateLoading] = useState(false);
@@ -175,6 +177,18 @@ export function EntryEditor({ entry }: { entry: Entry }) {
           ? "Campaign drafted in Resend."
           : `Campaign not drafted: ${result.error}`,
     );
+  }
+
+  async function toggleStar() {
+    try {
+      const { toggleFeatured } = await import("@/app/(admin)/admin/entries/actions");
+      const res = await toggleFeatured(entry.kind, entry.id);
+      setFeatured(res.featured);
+      setSaved(res.featured ? "Featured" : "Unfeatured");
+      setTimeout(() => setSaved(null), 2000);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    }
   }
 
   return (
@@ -368,6 +382,20 @@ export function EntryEditor({ entry }: { entry: Entry }) {
             {status}
           </p>
 
+          <button
+            type="button"
+            onClick={toggleStar}
+            className={`mt-4 inline-flex w-full items-center justify-center gap-2 border px-4 py-2.5 font-pixel text-[10px] tracking-[0.24em] uppercase transition-colors ${
+              featured
+                ? "border-amber-400 bg-amber-400 text-night"
+                : "border-paper/20 text-paper/50 hover:border-amber-400/50 hover:text-amber-300"
+            }`}
+            title={featured ? "Featured — click to unfeature" : "Star to feature (only 1 per kind)"}
+          >
+            <Star className={`h-3.5 w-3.5 ${featured ? "fill-night" : ""}`} />
+            {featured ? "Featured" : "Feature this"}
+          </button>
+
           {/* Word count + reading time */}
           <div className="mt-6 grid grid-cols-2 gap-3 border-t border-paper/10 pt-5">
             <div>
@@ -505,6 +533,7 @@ function IconButton({
 /* Per-type fields                                                     */
 /* ------------------------------------------------------------------ */
 
+
 function BlockFields({
   block,
   update,
@@ -512,6 +541,10 @@ function BlockFields({
   block: Block;
   update: (id: string, patch: Partial<Block>) => void;
 }) {
+  const FIELD =
+    "w-full border border-paper/20 bg-white/[0.03] px-3.5 py-2.5 font-body text-[14.5px] text-paper placeholder:text-paper/25 outline-none transition-colors duration-300 focus:border-spectre";
+  const LABEL =
+    "mb-2 block font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase";
   switch (block.type) {
     case "title":
     case "subtitle":
@@ -531,7 +564,7 @@ function BlockFields({
             rows={4}
             value={block.text}
             onChange={(event) => update(block.id, { text: event.target.value })}
-            placeholder="Body copy"
+            placeholder="Body copy — supports <b> <i> <u> <code> <reveal> inline"
             className={`${FIELD} resize-y`}
           />
           <div className="flex flex-wrap items-center gap-2">
@@ -556,14 +589,13 @@ function BlockFields({
               );
             })}
           </div>
-          <FormattingHint />
         </div>
       );
 
     case "divider":
       return (
         <p className="font-pixel text-[9px] tracking-[0.24em] text-paper/30 uppercase">
-          Divider — no settings
+          Divider — no settings, renders as rule with dot
         </p>
       );
 
@@ -591,6 +623,126 @@ function BlockFields({
               </button>
             ))}
           </div>
+        </div>
+      );
+
+    case "embed":
+      return (
+        <div className="grid gap-3">
+          <input
+            value={block.url}
+            onChange={(event) => update(block.id, { url: event.target.value })}
+            placeholder="https://youtube.com/watch?v=... or https://twitter.com/..."
+            className={FIELD}
+          />
+          <input
+            value={block.caption}
+            onChange={(event) => update(block.id, { caption: event.target.value })}
+            placeholder="Caption (optional)"
+            className={FIELD}
+          />
+        </div>
+      );
+
+    case "button":
+      return (
+        <div className="grid gap-3 md:grid-cols-[1fr_1fr_120px]">
+          <input
+            value={block.label}
+            onChange={(e) => update(block.id, { label: e.target.value })}
+            placeholder="Button label"
+            className={FIELD}
+          />
+          <input
+            value={block.href}
+            onChange={(e) => update(block.id, { href: e.target.value })}
+            placeholder="/contact or https://..."
+            className={FIELD}
+          />
+          <select
+            value={block.variant}
+            onChange={(e) => update(block.id, { variant: e.target.value as any })}
+            className={FIELD}
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="outline">Outline</option>
+          </select>
+        </div>
+      );
+
+    case "stats":
+      return (
+        <div className="grid gap-3">
+          {block.items.map((item, idx) => (
+            <div key={idx} className="flex gap-2">
+              <input
+                value={item.value}
+                onChange={(e) => {
+                  const items = [...block.items];
+                  items[idx] = { ...items[idx], value: e.target.value };
+                  update(block.id, { items });
+                }}
+                placeholder="100"
+                className={FIELD}
+              />
+              <input
+                value={item.label}
+                onChange={(e) => {
+                  const items = [...block.items];
+                  items[idx] = { ...items[idx], label: e.target.value };
+                  update(block.id, { items });
+                }}
+                placeholder="Label"
+                className={FIELD}
+              />
+              <button
+                onClick={() => update(block.id, { items: block.items.filter((_, i) => i !== idx) })}
+                className="grid h-10 w-10 place-items-center border border-paper/20 text-paper/45"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => update(block.id, { items: [...block.items, { label: "Label", value: "100" }] })}
+            className="inline-flex w-fit items-center gap-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/45 uppercase hover:text-spectre"
+          >
+            <Plus className="h-3 w-3" /> Add stat
+          </button>
+        </div>
+      );
+
+    case "gallery":
+      return (
+        <div className="grid gap-3">
+          {block.images.map((img, idx) => (
+            <div key={idx} className="grid gap-2 border border-paper/10 p-3">
+              <ImageField value={img.src} onChange={(src) => {
+                const images = [...block.images];
+                images[idx] = { ...images[idx], src };
+                update(block.id, { images });
+              }} />
+              <div className="grid gap-2 md:grid-cols-[1fr_1fr_40px]">
+                <input value={img.alt} onChange={(e) => {
+                  const images = [...block.images];
+                  images[idx] = { ...images[idx], alt: e.target.value };
+                  update(block.id, { images });
+                }} placeholder="Alt" className={FIELD} />
+                <input value={img.caption ?? ""} onChange={(e) => {
+                  const images = [...block.images];
+                  images[idx] = { ...images[idx], caption: e.target.value };
+                  update(block.id, { images });
+                }} placeholder="Caption" className={FIELD} />
+                <button onClick={() => update(block.id, { images: block.images.filter((_, i) => i !== idx) })} className="grid h-10 w-10 place-items-center border border-paper/20 text-paper/45">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button onClick={() => update(block.id, { images: [...block.images, { src: "", alt: "", caption: "" }] })} className="inline-flex w-fit items-center gap-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/45 uppercase hover:text-spectre">
+            <Plus className="h-3 w-3" /> Add image
+          </button>
         </div>
       );
 
@@ -662,22 +814,26 @@ function BlockFields({
                 placeholder={`Item ${index + 1}`}
                 className={FIELD}
               />
-              <IconButton
-                label="Remove item"
+              <button
+                type="button"
                 onClick={() =>
                   update(block.id, {
                     items: block.items.filter((_, i) => i !== index),
                   })
                 }
+                className="grid h-7 w-7 place-items-center border border-paper/20 text-paper/45 hover:text-paper"
               >
                 <X className="h-3.5 w-3.5" />
-              </IconButton>
+              </button>
             </div>
           ))}
-          <AddRow
-            label="Add item"
+          <button
+            type="button"
             onClick={() => update(block.id, { items: [...block.items, ""] })}
-          />
+            className="inline-flex w-fit items-center gap-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/45 uppercase hover:text-spectre"
+          >
+            <Plus className="h-3 w-3" /> Add item
+          </button>
         </div>
       );
 
@@ -698,15 +854,18 @@ function BlockFields({
                 className={`${FIELD} max-w-[190px]`}
               />
             ))}
-            <AddRow
-              label="Column"
+            <button
+              type="button"
               onClick={() =>
                 update(block.id, {
                   headers: [...block.headers, ""],
                   rows: block.rows.map((row) => [...row, ""]),
                 })
               }
-            />
+              className="inline-flex w-fit items-center gap-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/45 uppercase hover:text-spectre"
+            >
+              <Plus className="h-3 w-3" /> Column
+            </button>
           </div>
           {block.rows.map((row, rowIndex) => (
             <div key={rowIndex} className="flex flex-wrap gap-2">
@@ -722,36 +881,37 @@ function BlockFields({
                   className={`${FIELD} max-w-[190px]`}
                 />
               ))}
-              <IconButton
-                label="Remove row"
+              <button
+                type="button"
                 onClick={() =>
                   update(block.id, {
                     rows: block.rows.filter((_, i) => i !== rowIndex),
                   })
                 }
+                className="grid h-7 w-7 place-items-center border border-paper/20 text-paper/45 hover:text-paper"
               >
                 <X className="h-3.5 w-3.5" />
-              </IconButton>
+              </button>
             </div>
           ))}
-          <AddRow
-            label="Row"
+          <button
+            type="button"
             onClick={() =>
               update(block.id, {
                 rows: [...block.rows, block.headers.map(() => "")],
               })
             }
-          />
+            className="inline-flex w-fit items-center gap-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/45 uppercase hover:text-spectre"
+          >
+            <Plus className="h-3 w-3" /> Row
+          </button>
         </div>
       );
 
     case "image":
       return (
         <div className="grid gap-3">
-          <ImageField
-            value={block.src}
-            onChange={(src) => update(block.id, { src })}
-          />
+          <ImageField value={block.src} onChange={(src) => update(block.id, { src })} />
           <div className="grid gap-3 md:grid-cols-2">
             <input
               value={block.alt}
@@ -761,9 +921,7 @@ function BlockFields({
             />
             <input
               value={block.caption}
-              onChange={(event) =>
-                update(block.id, { caption: event.target.value })
-              }
+              onChange={(event) => update(block.id, { caption: event.target.value })}
               placeholder="Caption"
               className={FIELD}
             />
@@ -775,10 +933,7 @@ function BlockFields({
       return (
         <div className="grid gap-3">
           {block.images.map((image, index) => (
-            <div
-              key={index}
-              className="grid gap-2 border border-paper/10 p-3"
-            >
+            <div key={index} className="grid gap-2 border border-paper/10 p-3">
               <ImageField
                 value={image.src}
                 onChange={(src) => {
@@ -800,32 +955,34 @@ function BlockFields({
                   placeholder="Alt text"
                   className={FIELD}
                 />
-                <IconButton
-                  label="Remove image"
+                <button
+                  type="button"
                   onClick={() =>
                     update(block.id, {
                       images: block.images.filter((_, i) => i !== index),
                     })
                   }
+                  className="grid h-7 w-7 place-items-center border border-paper/20 text-paper/45 hover:text-paper"
                 >
                   <X className="h-3.5 w-3.5" />
-                </IconButton>
+                </button>
               </div>
             </div>
           ))}
-          <AddRow
-            label="Add image"
+          <button
+            type="button"
             onClick={() =>
               update(block.id, {
                 images: [...block.images, { src: "", alt: "" }],
               })
             }
-          />
+            className="inline-flex w-fit items-center gap-1.5 font-pixel text-[9px] tracking-[0.24em] text-paper/45 uppercase hover:text-spectre"
+          >
+            <Plus className="h-3 w-3" /> Add image
+          </button>
           <input
             value={block.caption}
-            onChange={(event) =>
-              update(block.id, { caption: event.target.value })
-            }
+            onChange={(event) => update(block.id, { caption: event.target.value })}
             placeholder="Caption"
             className={FIELD}
           />
@@ -843,9 +1000,7 @@ function BlockFields({
           />
           <input
             value={block.caption}
-            onChange={(event) =>
-              update(block.id, { caption: event.target.value })
-            }
+            onChange={(event) => update(block.id, { caption: event.target.value })}
             placeholder="Caption"
             className={FIELD}
           />
@@ -856,6 +1011,8 @@ function BlockFields({
       return null;
   }
 }
+
+
 
 function AddRow({ label, onClick }: { label: string; onClick: () => void }) {
   return (

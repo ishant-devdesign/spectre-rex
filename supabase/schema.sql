@@ -127,6 +127,9 @@ create unique index if not exists signals_featured_unique
 create unique index if not exists projects_featured_unique
   on public.projects (featured) where featured = true;
 
+-- email templates options
+alter table public.templates add column if not exists email_options jsonb not null default '{}'::jsonb;
+
 -- =====================================================================
 -- classified system — REMOVED
 -- Draft system is sufficient for visibility control.
@@ -169,6 +172,7 @@ create table if not exists public.templates (
   summary       text,
   hero_image    text,
   blocks        jsonb       not null default '[]'::jsonb,
+  email_options jsonb       not null default '{}'::jsonb,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );

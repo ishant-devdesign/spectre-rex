@@ -67,6 +67,7 @@ export const templates = pgTable("templates", {
   summary: text("summary"),
   heroImage: text("hero_image"),
   blocks: jsonb("blocks").notNull().default([]),
+  emailOptions: jsonb("email_options").default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

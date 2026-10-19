@@ -8,6 +8,10 @@ drizzle.config.ts
 email/README.txt
 email/autoreply.html
 email/autoreply.txt
+email/supabase/change-email.html
+email/supabase/confirm-signup.html
+email/supabase/magic-link.html
+email/supabase/reset-password.html
 eslint.config.mjs
 next.config.ts
 package-lock.json
@@ -118,6 +122,7 @@ src/db/schema.ts
 src/lib/blocks.ts
 src/lib/email/contactAck.ts
 src/lib/email/entryEmail.ts
+src/lib/email/templates.ts
 src/lib/entries.ts
 src/lib/hooks.ts
 src/lib/media.ts

@@ -14,6 +14,7 @@ export interface Template {
   summary: string | null;
   heroImage: string | null;
   blocks: Block[];
+  emailOptions: Record<string, any>;
   updatedAt: Date;
 }
 
@@ -32,6 +33,7 @@ export async function listTemplates(kind?: TemplateKind): Promise<Template[]> {
       summary: r.summary ?? null,
       heroImage: r.heroImage ?? null,
       blocks: parseBlocks(r.blocks),
+      emailOptions: (r.emailOptions as any) ?? {},
       updatedAt: r.updatedAt,
     }));
   } catch (e) {
@@ -54,6 +56,7 @@ export async function getTemplate(id: string): Promise<Template | null> {
       summary: row.summary ?? null,
       heroImage: row.heroImage ?? null,
       blocks: parseBlocks(row.blocks),
+      emailOptions: (row.emailOptions as any) ?? {},
       updatedAt: row.updatedAt,
     };
   } catch {

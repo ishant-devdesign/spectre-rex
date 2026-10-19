@@ -98,3 +98,44 @@ on conflict (code) do update set
 select
   (select count(*) from public.signals)  as signals,
   (select count(*) from public.projects) as projects;
+
+-- ---------------------------------------------------------------------
+-- templates — email templates
+-- ---------------------------------------------------------------------
+insert into public.templates (name, kind, title, summary, email_options, blocks)
+values
+  (
+    'Campaign — Standard',
+    'email',
+    'New transmission from Spectre Rex',
+    'Teaser with hero, summary, CTA, and latest projects/signals',
+    '{"includeLatestProjects": true, "includeLatestSignals": true, "latestCount": 3, "ctaLabel": "Read the full transmission"}'::jsonb,
+    '[]'::jsonb
+  ),
+  (
+    'Welcome — New subscriber',
+    'email',
+    'Welcome to Spectre Rex transmissions',
+    'Welcome email for new subscribers',
+    '{"ctaLabel": "Read signals", "ctaUrl": "https://spectrerex.com/signals"}'::jsonb,
+    '[]'::jsonb
+  ),
+  (
+    'Contact ack — Dragon reading',
+    'email',
+    'Received. The dragon is reading.',
+    'Acknowledgement for contact form',
+    '{}'::jsonb,
+    '[]'::jsonb
+  )
+on conflict (id) do nothing;
+
+-- For templates we don't have unique constraint, so use name+kind as key workaround
+-- Delete and re-insert to keep idempotent
+delete from public.templates where name in ('Campaign — Standard','Welcome — New subscriber','Contact ack — Dragon reading');
+insert into public.templates (name, kind, title, summary, email_options, blocks)
+values
+  ('Campaign — Standard','email','New transmission from Spectre Rex','Teaser with hero, summary, CTA, and latest projects/signals','{"includeLatestProjects": true, "includeLatestSignals": true, "latestCount": 3, "ctaLabel": "Read the full transmission"}'::jsonb,'[]'::jsonb),
+  ('Welcome — New subscriber','email','Welcome to Spectre Rex transmissions','Welcome email for new subscribers','{"ctaLabel": "Read signals", "ctaUrl": "https://spectrerex.com/signals"}'::jsonb,'[]'::jsonb),
+  ('Contact ack — Dragon reading','email','Received. The dragon is reading.','Acknowledgement for contact form','{}'::jsonb,'[]'::jsonb);
+

@@ -1,0 +1,39 @@
+<!--
+Supabase Auth - Magic Link
+Paste into Supabase Dashboard -> Authentication -> Email Templates -> Magic Link
+Subject: Your Spectre Rex admin link
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0b1014" style="background:#0b1014;margin:0;padding:0">
+<tr><td align="center" style="padding:32px 12px">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%">
+<tr><td bgcolor="#0b1014" style="background:#0b1014;padding:0 0 26px">
+<img src="https://spectrerex.com/assets/email/logo-paper.png" alt="Spectre Rex" width="200" height="50" style="display:block;width:200px;height:auto;border:0" />
+</td></tr>
+<tr><td bgcolor="#35aee4" style="background:#35aee4;height:3px;line-height:0;font-size:0">&nbsp;</td></tr>
+<tr><td bgcolor="#f2f0ea" style="background:#f2f0ea;padding:38px 36px 8px">
+<div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#959491">Studio access</div>
+<h1 style="margin:16px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:32px;line-height:1.05;font-weight:800;letter-spacing:-0.035em;color:#242424">Your magic link<br />is ready.</h1>
+</td></tr>
+<tr><td bgcolor="#f2f0ea" style="background:#f2f0ea;padding:0 36px 34px">
+<p style="margin:26px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.62;color:#515150">Click below to sign in to the Spectre Rex admin panel. Link expires in 1 hour and works once.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px"><tr>
+<td bgcolor="#35aee4" style="background:#35aee4">
+<a href="{{ .ConfirmationURL }}" style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:#0b1014;padding:14px 24px;text-decoration:none">Open admin panel</a>
+</td>
+</tr></table>
+<p style="margin:20px 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.5;color:#8b8a87">If button fails, copy: <span style="word-break:break-all;color:#515150">{{ .ConfirmationURL }}</span></p>
+<p style="margin:20px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#8b8a87">Didn't request this? Ignore — no account will be created.</p>
+</td></tr>
+<tr><td bgcolor="#0b1014" style="background:#0b1014;padding:24px 0 0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#636565">End of transmission</td>
+<td align="right" style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#4c4f50">Auth</td>
+</tr></table>
+<div style="border-top:1px solid #272b2e;margin-top:16px;padding-top:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.7;color:#5a5c5d">
+Spectre Rex Studios &middot; Gurugram, India<br />
+<a href="https://spectrerex.com" style="color:#8a8b8a;text-decoration:none;border-bottom:1px solid #246f91">spectrerex.com</a>
+</div>
+</td></tr>
+</table>
+</td></tr>
+</table>

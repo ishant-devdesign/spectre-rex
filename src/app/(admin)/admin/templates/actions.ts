@@ -38,6 +38,7 @@ export async function saveTemplate(input: {
   summary: string;
   heroImage: string;
   blocks: Block[];
+  emailOptions?: Record<string, any>;
 }) {
   await assertAdmin();
   const db = getDb();
@@ -51,6 +52,7 @@ export async function saveTemplate(input: {
       summary: input.summary || null,
       heroImage: input.heroImage || null,
       blocks: input.blocks,
+      emailOptions: input.emailOptions || {},
       updatedAt: new Date(),
     })
     .where(eq(templates.id, input.id));

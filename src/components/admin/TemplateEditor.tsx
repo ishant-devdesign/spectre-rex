@@ -21,6 +21,7 @@ export function TemplateEditor({ template }: { template: Template }) {
   const [summary, setSummary] = useState(template.summary ?? "");
   const [heroImage, setHeroImage] = useState(template.heroImage ?? "");
   const [blocks, setBlocks] = useState<Block[]>(template.blocks);
+  const [emailOptions, setEmailOptions] = useState<Record<string, any>>(template.emailOptions ?? {});
   const [adding, setAdding] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -39,7 +40,7 @@ export function TemplateEditor({ template }: { template: Template }) {
 
   function persist() {
     startTransition(async () => {
-      await saveTemplate({ id: template.id, name, kind, title, subtitle, summary, heroImage, blocks });
+      await saveTemplate({ id: template.id, name, kind, title, subtitle, summary, heroImage, blocks, emailOptions });
       setSaved("Saved");
       setTimeout(() => setSaved(null), 2000);
     });
@@ -92,6 +93,40 @@ export function TemplateEditor({ template }: { template: Template }) {
               <span className={LABEL}>Hero image</span>
               <ImageField value={heroImage} onChange={setHeroImage} />
             </div>
+
+            {kind === "email" ? (
+              <div className="grid gap-4 border-t border-paper/10 pt-5">
+                <p className="font-pixel text-[9.5px] tracking-[0.28em] text-spectre uppercase">Email options</p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={!!emailOptions.includeLatestProjects} onChange={(e) => setEmailOptions({ ...emailOptions, includeLatestProjects: e.target.checked })} className="h-4 w-4 accent-[#35AEE4]" />
+                    <span className="font-pixel text-[9px] uppercase text-paper/60">Include latest projects</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={!!emailOptions.includeLatestSignals} onChange={(e) => setEmailOptions({ ...emailOptions, includeLatestSignals: e.target.checked })} className="h-4 w-4 accent-[#35AEE4]" />
+                    <span className="font-pixel text-[9px] uppercase text-paper/60">Include latest signals</span>
+                  </label>
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div>
+                    <span className={LABEL}>Latest count</span>
+                    <input type="number" min={1} max={6} value={emailOptions.latestCount ?? 3} onChange={(e) => setEmailOptions({ ...emailOptions, latestCount: Number(e.target.value) })} className={FIELD} />
+                  </div>
+                  <div>
+                    <span className={LABEL}>CTA label</span>
+                    <input value={emailOptions.ctaLabel ?? ""} onChange={(e) => setEmailOptions({ ...emailOptions, ctaLabel: e.target.value })} className={FIELD} placeholder="Read full" />
+                  </div>
+                  <div>
+                    <span className={LABEL}>CTA URL</span>
+                    <input value={emailOptions.ctaUrl ?? ""} onChange={(e) => setEmailOptions({ ...emailOptions, ctaUrl: e.target.value })} className={FIELD} placeholder="https://..." />
+                  </div>
+                </div>
+                <div>
+                  <span className={LABEL}>Custom footer</span>
+                  <input value={emailOptions.customFooter ?? ""} onChange={(e) => setEmailOptions({ ...emailOptions, customFooter: e.target.value })} className={FIELD} placeholder="Extra footer text" />
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <ul className="mt-6 space-y-4">

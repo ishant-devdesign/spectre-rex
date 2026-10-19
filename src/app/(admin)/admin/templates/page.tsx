@@ -1,10 +1,20 @@
-import Link from "next/link";
-import { Plus, FileText, Layers, Mail } from "lucide-react";
-import { listTemplates, type TemplateKind } from "@/lib/templates";
-import { AdminHeader } from "@/components/admin/AdminHeader";
-import { createTemplate } from "./actions";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Plus, FileText, Layers, Mail, Loader2 } from "lucide-react";
+import { AdminHeader } from "@/components/admin/AdminHeader";
+import { PixelLoader } from "@/components/admin/PixelLoader";
+
+type TemplateKind = "signal" | "project" | "email";
+
+interface Template {
+  id: string;
+  name: string;
+  kind: TemplateKind;
+  blocks: any[];
+  updatedAt: string;
+}
 
 const KIND_ICON: Record<TemplateKind, any> = {
   signal: FileText,
@@ -12,8 +22,54 @@ const KIND_ICON: Record<TemplateKind, any> = {
   email: Mail,
 };
 
-export default async function TemplatesPage() {
-  const templates = await listTemplates();
+export default function TemplatesPage() {
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState<TemplateKind | null>(null);
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/templates")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setTemplates(data);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const create = async (kind: TemplateKind) => {
+    setCreating(kind);
+    try {
+      const res = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: `New ${kind} template`, kind }),
+      });
+      const data = await res.json();
+      if (data.ok && data.id) {
+        window.location.href = `/admin/templates/${data.id}`;
+      } else {
+        alert(data.error || "Failed to create template");
+      }
+    } catch (e) {
+      alert("Failed to create template");
+    } finally {
+      setCreating(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-[1240px] px-5 py-10 md:px-10 md:py-14">
+        <AdminHeader current="templates" />
+        <PixelLoader label="Loading templates..." />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-[1240px] px-5 py-10 md:px-10 md:py-14">
@@ -28,14 +84,14 @@ export default async function TemplatesPage() {
         </div>
         <div className="flex gap-2">
           {(["signal", "project", "email"] as TemplateKind[]).map((kind) => (
-            <form key={kind} action={createTemplate.bind(null, kind, `New ${kind} template`)}>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 border border-paper/20 px-3 py-2 font-pixel text-[9px] tracking-[0.2em] text-paper/60 uppercase hover:border-spectre hover:text-spectre"
-              >
-                <Plus className="h-3 w-3" /> {kind}
-              </button>
-            </form>
+            <button
+              key={kind}
+              onClick={() => create(kind)}
+              disabled={creating === kind}
+              className="inline-flex items-center gap-1.5 border border-paper/20 px-3 py-2 font-pixel text-[9px] tracking-[0.2em] text-paper/60 uppercase hover:border-spectre hover:text-spectre disabled:opacity-50"
+            >
+              {creating === kind ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />} {kind}
+            </button>
           ))}
         </div>
       </div>
@@ -57,7 +113,7 @@ export default async function TemplatesPage() {
                   <div className="min-w-0">
                     <p className="truncate font-display text-[1.05rem] font-bold tracking-[-0.01em]">{t.name}</p>
                     <p className="font-pixel text-[9px] tracking-[0.2em] text-paper/40 uppercase">
-                      {t.kind} · {t.blocks.length} blocks · {t.updatedAt.toLocaleDateString()}
+                      {t.kind} · {t.blocks?.length ?? 0} blocks · {new Date(t.updatedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </Link>

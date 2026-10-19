@@ -20,6 +20,7 @@ import {
 } from "@/lib/blocks";
 import { saveEntry, type Entry } from "@/app/(admin)/admin/entries/actions";
 import { ImageField } from "./ImageField";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { slugify } from "@/lib/redact";
 import { createCampaign } from "@/app/(admin)/admin/entries/actions";
 
@@ -51,6 +52,9 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   const [blocks, setBlocks] = useState<Block[]>(entry.blocks);
   const [templates, setTemplates] = useState<any[]>([]);
   const [templateLoading, setTemplateLoading] = useState(false);
+  const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<null | { type: string; id?: string; index?: number }>(null);
 
   // Word count + reading time + SEO preview
   const allText = [title, subtitle, summary, ...blocks.map((b) => ("text" in b ? (b as any).text : "") + ("items" in b ? (b as any).items?.join(" ") : "") + ("caption" in b ? (b as any).caption : ""))].join(" ");
@@ -73,6 +77,15 @@ export function EntryEditor({ entry }: { entry: Entry }) {
 
   async function loadTemplate(id: string) {
     if (!id) return;
+    // If any block exists or title/summary filled, confirm
+    const hasContent = blocks.length > 0 || title.trim() !== "" || subtitle.trim() !== "" || summary.trim() !== "";
+    if (hasContent) {
+      setPendingTemplateId(id);
+      setConfirmAction({ type: "load-template", id });
+      setConfirmOpen(true);
+      return;
+    }
+    // No content, load directly
     setTemplateLoading(true);
     try {
       const res = await fetch(`/api/templates/${id}`);
@@ -88,6 +101,28 @@ export function EntryEditor({ entry }: { entry: Entry }) {
       }
     } catch {}
     setTemplateLoading(false);
+  }
+
+  async function confirmLoadTemplate() {
+    if (!pendingTemplateId) return;
+    setConfirmOpen(false);
+    setTemplateLoading(true);
+    try {
+      const res = await fetch(`/api/templates/${pendingTemplateId}`);
+      const tpl = await res.json();
+      if (tpl) {
+        if (tpl.title) setTitle(tpl.title);
+        if (tpl.subtitle) setSubtitle(tpl.subtitle);
+        if (tpl.summary) setSummary(tpl.summary);
+        if (tpl.heroImage) setHeroImage(tpl.heroImage);
+        if (Array.isArray(tpl.blocks) && tpl.blocks.length > 0) {
+          setBlocks(tpl.blocks);
+        }
+      }
+    } catch {}
+    setTemplateLoading(false);
+    setPendingTemplateId(null);
+    setConfirmAction(null);
   }
 
   async function saveAsTemplate() {
@@ -129,8 +164,19 @@ export function EntryEditor({ entry }: { entry: Entry }) {
         block.id === id ? ({ ...block, ...patch } as Block) : block,
       ),
     );
-  const remove = (id: string) =>
-    setBlocks((list) => list.filter((block) => block.id !== id));
+  const remove = (id: string) => {
+    setConfirmAction({ type: "remove-block", id });
+    setConfirmOpen(true);
+  };
+
+  const confirmRemoveBlock = () => {
+    if (confirmAction?.type === "remove-block" && confirmAction.id) {
+      const id = confirmAction.id;
+      setBlocks((list) => list.filter((block) => block.id !== id));
+    }
+    setConfirmOpen(false);
+    setConfirmAction(null);
+  };
   const move = (index: number, delta: number) =>
     setBlocks((list) => {
       const next = [...list];
@@ -192,6 +238,7 @@ export function EntryEditor({ entry }: { entry: Entry }) {
   }
 
   return (
+    <>
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
       {/* ------------------------------- blocks ------------------------ */}
       <div>
@@ -502,6 +549,39 @@ export function EntryEditor({ entry }: { entry: Entry }) {
         </div>
       </aside>
     </div>
+    <ConfirmDialog
+      open={confirmOpen}
+      title={
+        confirmAction?.type === "load-template"
+          ? "Load template?"
+          : confirmAction?.type === "remove-block"
+            ? "Delete block?"
+            : "Are you sure?"
+      }
+      message={
+        confirmAction?.type === "load-template"
+          ? "Loading a template will replace your current title, subtitle, summary, hero image and all blocks. This cannot be undone."
+          : confirmAction?.type === "remove-block"
+            ? "This block will be permanently removed. This cannot be undone."
+            : "This action cannot be undone."
+      }
+      confirmLabel={confirmAction?.type === "load-template" ? "Load template" : "Delete"}
+      onConfirm={() => {
+        if (confirmAction?.type === "load-template") {
+          confirmLoadTemplate();
+        } else if (confirmAction?.type === "remove-block") {
+          confirmRemoveBlock();
+        } else {
+          setConfirmOpen(false);
+        }
+      }}
+      onCancel={() => {
+        setConfirmOpen(false);
+        setConfirmAction(null);
+        setPendingTemplateId(null);
+      }}
+    />
+    </>
   );
 }
 

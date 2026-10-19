@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Plus, Save, Trash2, X, ArrowLeft } from "lucide
 import { BLOCK_LABELS, emptyBlock, type Block, type BlockType, PARAGRAPH_SIZES } from "@/lib/blocks";
 import { saveTemplate, deleteTemplate } from "@/app/(admin)/admin/templates/actions";
 import { ImageField } from "./ImageField";
+import { ConfirmDialog } from "./ConfirmDialog";
 import type { Template } from "@/lib/templates";
 import Link from "next/link";
 
@@ -23,12 +24,18 @@ export function TemplateEditor({ template }: { template: Template }) {
   const [blocks, setBlocks] = useState<Block[]>(template.blocks);
   const [emailOptions, setEmailOptions] = useState<Record<string, any>>(template.emailOptions ?? {});
   const [adding, setAdding] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingBlockId, setPendingBlockId] = useState<string | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const update = (id: string, patch: Partial<Block>) =>
     setBlocks((list) => list.map((b) => (b.id === id ? ({ ...b, ...patch } as Block) : b)));
-  const remove = (id: string) => setBlocks((list) => list.filter((b) => b.id !== id));
+  const remove = (id: string) => {
+    setPendingBlockId(id);
+    setConfirmOpen(true);
+  };
   const move = (index: number, delta: number) =>
     setBlocks((list) => {
       const next = [...list];
@@ -186,6 +193,24 @@ export function TemplateEditor({ template }: { template: Template }) {
           </div>
         </div>
 
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete block?"
+        message="This block will be permanently removed. This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (pendingBlockId) {
+            setBlocks((list) => list.filter((b) => b.id !== pendingBlockId));
+          }
+          setConfirmOpen(false);
+          setPendingBlockId(null);
+        }}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setPendingBlockId(null);
+        }}
+      />
+
         <aside className="lg:sticky lg:top-20">
           <div className="border border-paper/12 bg-white/[0.02] p-5">
             <p className="font-pixel text-[9.5px] tracking-[0.28em] text-paper/40 uppercase">Actions</p>
@@ -197,14 +222,27 @@ export function TemplateEditor({ template }: { template: Template }) {
               >
                 <Save className="h-3.5 w-3.5" /> Save template
               </button>
-              <form action={deleteTemplate.bind(null, template.id)}>
-                <button
-                  type="submit"
-                  className="w-full border border-red-500/30 px-4 py-3 font-pixel text-[10px] tracking-[0.24em] text-red-400 uppercase hover:border-red-500 hover:bg-red-500/10"
-                >
-                  Delete template
-                </button>
-              </form>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteOpen(true)}
+                className="w-full border border-red-500/30 px-4 py-3 font-pixel text-[10px] tracking-[0.24em] text-red-400 uppercase hover:border-red-500 hover:bg-red-500/10"
+              >
+                Delete template
+              </button>
+
+              <ConfirmDialog
+                open={confirmDeleteOpen}
+                title="Delete template?"
+                message={`Template "${name}" will be permanently deleted. This cannot be undone.`}
+                confirmLabel="Delete template"
+                onConfirm={async () => {
+                  try {
+                    await deleteTemplate(template.id);
+                  } catch {}
+                }}
+                onCancel={() => setConfirmDeleteOpen(false)}
+                variant="danger"
+              />
             </div>
             <p className="mt-4 text-[11px] leading-relaxed text-paper/30">
               Templates are reusable starters for signals, projects, and emails. Load them from the editor dropdown.

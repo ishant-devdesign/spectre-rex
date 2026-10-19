@@ -75,6 +75,7 @@ src/app/not-found.tsx
 src/app/robots.ts
 src/app/sitemap.xml/route.ts
 src/components/admin/AdminHeader.tsx
+src/components/admin/ConfirmDialog.tsx
 src/components/admin/CopyField.tsx
 src/components/admin/DeleteEntryButton.tsx
 src/components/admin/EntryEditor.tsx

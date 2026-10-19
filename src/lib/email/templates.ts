@@ -2,6 +2,7 @@
  * Central email template library — same aesthetic across all emails.
  * Dark night #0B1014, paper #F2F0EA, spectre #35AEE4, ink #242424
  * All tables, inline styles, no external CSS — Gmail safe.
+ * Campaign redesigned to be premium.
  */
 
 const NIGHT = "#0b1014";
@@ -73,10 +74,7 @@ function footer(siteUrl: string, customFooter?: string): string {
   </td></tr>`;
 }
 
-// ------------------------------------------------------------------
-// Auth templates — for Supabase Dashboard (paste HTML)
-// ------------------------------------------------------------------
-
+// Auth templates
 export function magicLinkEmail(supabaseLink: string, opts: EmailTemplateOptions = {}) {
   const o = { ...DEFAULTS, ...opts };
   const html = `
@@ -96,7 +94,6 @@ ${header(o.logoUrl)}
     </td>
   </tr></table>
   <p style="margin:20px 0 0;font-family:${MONO};font-size:11px;line-height:1.5;color:${INK_FAINT}">If button fails, copy: <span style="word-break:break-all;color:${INK_SOFT}">${esc(supabaseLink)}</span></p>
-  <p style="margin:20px 0 0;font-family:${SANS};font-size:14px;line-height:1.5;color:${INK_FAINT}">Didn't request this? Ignore — no account will be created.</p>
 </td></tr>
 ${footer(o.siteUrl)}
 </table>
@@ -106,36 +103,9 @@ ${footer(o.siteUrl)}
   return {
     subject: "Your Spectre Rex admin link",
     html: wrapHtml("Magic link", "Sign in to Spectre Rex admin", html),
-    text: `Sign in to Spectre Rex admin\n\n${supabaseLink}\n\nExpires in 1 hour, one-time use.\n\nIf you didn't request this, ignore.`,
+    text: `Sign in to Spectre Rex admin\n\n${supabaseLink}\n\nExpires in 1 hour, one-time use.`,
   };
 }
-
-export function confirmSignupEmail(supabaseLink: string, opts: EmailTemplateOptions = {}) {
-  const o = { ...DEFAULTS, ...opts };
-  const html = `
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NIGHT}" style="background:${NIGHT};padding:0"><tr><td align="center" style="padding:32px 12px">
-<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%">
-${header(o.logoUrl)}
-<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:38px 36px 34px">
-  <div style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#959491">Confirm email</div>
-  <h1 style="margin:16px 0 0;font-family:${SANS};font-size:32px;font-weight:800;color:${INK}">Confirm your email</h1>
-  <p style="margin:20px 0 0;font-family:${SANS};font-size:17px;line-height:1.62;color:${INK_SOFT}">Click to confirm your email for Spectre Rex Studios.</p>
-  <table style="margin-top:24px"><tr><td bgcolor="${SPECTRE}"><a href="${supabaseLink}" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${NIGHT};padding:14px 24px;text-decoration:none">Confirm email</a></td></tr></table>
-</td></tr>
-${footer(o.siteUrl)}
-</table>
-</td></tr></table>`;
-
-  return {
-    subject: "Confirm your email — Spectre Rex",
-    html: wrapHtml("Confirm email", "Confirm your email", html),
-    text: `Confirm your email\n${supabaseLink}`,
-  };
-}
-
-// ------------------------------------------------------------------
-// Contact ack — updated, same aesthetic
-// ------------------------------------------------------------------
 
 export function contactAckEmail(opts: EmailTemplateOptions = {}) {
   const o = { ...DEFAULTS, ...opts };
@@ -150,7 +120,7 @@ ${header(o.logoUrl)}
 </td></tr>
 <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 34px">
   <p style="margin:26px 0 0;font-family:${SANS};font-size:17px;line-height:1.62;color:${INK_SOFT}">Your message reached the studio. It is in the pile, and the pile is guarded.</p>
-  <p style="margin:16px 0 0;font-family:${SANS};font-size:17px;line-height:1.62;color:${INK_SOFT}">A human replies to every line, usually within two working days. Occasionally the dragon naps. It has been a long century.</p>
+  <p style="margin:16px 0 0;font-family:${SANS};font-size:17px;line-height:1.62;color:${INK_SOFT}">A human replies to every line, usually within two working days. Occasionally the dragon naps.</p>
   <table style="margin-top:30px"><tr><td bgcolor="${SPECTRE}"><a href="${o.siteUrl}" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${NIGHT};padding:14px 24px;text-decoration:none">Visit the studio</a></td></tr></table>
 </td></tr>
 ${footer(o.siteUrl)}
@@ -161,12 +131,12 @@ ${footer(o.siteUrl)}
   return {
     subject: "Received. The dragon is reading.",
     html: wrapHtml("Received", "A human replies within two working days", html),
-    text: `The dragon is reading.\n\nYour message reached the studio. A human replies within two working days.\n\n${o.siteUrl}`,
+    text: `The dragon is reading.\n\nYour message reached the studio.\n\n${o.siteUrl}`,
   };
 }
 
 // ------------------------------------------------------------------
-// Campaign — completely redesigned, editable options
+// Campaign — PREMIUM redesign
 // ------------------------------------------------------------------
 
 export interface CampaignRenderOptions extends EmailTemplateOptions {
@@ -191,70 +161,119 @@ export function campaignEmail(opts: CampaignRenderOptions) {
   const label = e.kind === "signal" ? "SIGNAL" : "PROJECT";
 
   const hero = e.heroImage
-    ? `<tr><td style="padding:0"><a href="${e.url}"><img src="${esc(e.heroImage)}" alt="${esc(e.title)}" width="600" style="display:block;width:100%;height:auto;border:0" /></a></td></tr>`
-    : "";
-
-  const latestProjects = o.includeLatestProjects && o.latestProjects?.length
     ? `
-    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 8px">
-      <div style="border-top:1px solid ${HAIRLINE};padding-top:24px;font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${INK_FAINT}">Latest projects</div>
+    <tr><td style="padding:0;background:${NIGHT}">
+      <a href="${e.url}" style="text-decoration:none">
+        <div style="position:relative">
+          <img src="${esc(e.heroImage)}" alt="${esc(e.title)}" width="600" style="display:block;width:100%;height:auto;border:0;opacity:0.9" />
+        </div>
+      </a>
+    </td></tr>
+    <tr><td bgcolor="${NIGHT}" style="background:${NIGHT};padding:0 0 0"><div style="height:3px;background:${SPECTRE};line-height:0;font-size:0">&nbsp;</div></td></tr>
+    `
+    : `<tr><td bgcolor="${SPECTRE}" style="background:${SPECTRE};height:3px;line-height:0;font-size:0">&nbsp;</td></tr>`;
+
+  const latestProjects =
+    o.includeLatestProjects && o.latestProjects?.length
+      ? `
+    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:32px 36px 12px">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${INK_FAINT}">More from the lab</td>
+        <td align="right" style="font-family:${MONO};font-size:9px;letter-spacing:0.2em;color:${INK_FAINT}">${o.latestProjects!.length} projects</td>
+      </tr></table>
     </td></tr>
     ${o.latestProjects!
       .slice(0, o.latestCount)
       .map(
         (p) => `
-    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 12px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fff" style="border:1px solid ${HAIRLINE}"><tr>
-        <td width="88" valign="top"><img src="${esc(p.heroImage ?? "")}" alt="" width="88" height="66" style="display:block;width:88px;height:66px;object-fit:cover" /></td>
-        <td style="padding:10px 14px"><div style="font-family:${MONO};font-size:9px;letter-spacing:0.2em;color:${INK_FAINT}">PROJECT ${esc(p.code)}</div><a href="${o.siteUrl}/projects/${p.slug}" style="font-family:${SANS};font-size:15px;font-weight:700;color:${INK};text-decoration:none">${esc(p.title)}</a><div style="font-family:${SANS};font-size:13px;color:${INK_SOFT}">${esc(p.summary ?? "")}</div></td>
-      </tr></table>
+    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 14px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background:#ffffff;border:1px solid ${HAIRLINE};border-left:3px solid ${SPECTRE}">
+        <tr>
+          <td width="104" valign="top" style="width:104px;background:${NIGHT}">
+            <a href="${o.siteUrl}/projects/${p.slug}"><img src="${esc(p.heroImage ?? `${o.siteUrl}/assets/img/concept-1.jpg`)}" alt="${esc(p.title)}" width="104" height="78" style="display:block;width:104px;height:78px;object-fit:cover;border:0;opacity:0.85" /></a>
+          </td>
+          <td valign="top" style="padding:14px 18px">
+            <div style="font-family:${MONO};font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:${INK_FAINT}">PROJECT ${esc(p.code)}</div>
+            <a href="${o.siteUrl}/projects/${p.slug}" style="display:block;margin-top:6px;font-family:${SANS};font-size:17px;font-weight:800;letter-spacing:-0.02em;color:${INK};text-decoration:none;line-height:1.15">${esc(p.title)}</a>
+            <div style="margin-top:6px;font-family:${SANS};font-size:13.5px;line-height:1.5;color:${INK_SOFT}">${esc((p.summary || "").slice(0, 90))}</div>
+          </td>
+        </tr>
+      </table>
     </td></tr>`,
       )
       .join("")}
     `
-    : "";
+      : "";
 
-  const latestSignals = o.includeLatestSignals && o.latestSignals?.length
-    ? `
-    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 8px">
-      <div style="border-top:1px solid ${HAIRLINE};padding-top:24px;font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${INK_FAINT}">Latest signals</div>
+  const latestSignals =
+    o.includeLatestSignals && o.latestSignals?.length
+      ? `
+    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:12px 36px 12px">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${INK_FAINT}">From the archive</td>
+        <td align="right" style="font-family:${MONO};font-size:9px;letter-spacing:0.2em;color:${INK_FAINT}">${o.latestSignals!.length} signals</td>
+      </tr></table>
     </td></tr>
     ${o.latestSignals!
       .slice(0, o.latestCount)
       .map(
         (s) => `
-    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 12px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#fff" style="border:1px solid ${HAIRLINE}"><tr>
-        <td style="padding:12px 16px"><div style="font-family:${MONO};font-size:9px;letter-spacing:0.2em;color:${INK_FAINT}">SIGNAL ${esc(s.code)}${s ? "" : ""}</div><a href="${o.siteUrl}/signals/${s.slug}" style="font-family:${SANS};font-size:16px;font-weight:700;color:${INK};text-decoration:none">${esc(s.title)}</a><div style="margin-top:4px;font-family:${SANS};font-size:13px;color:${INK_SOFT}">${esc(s.summary ?? "")}</div></td>
-      </tr></table>
+    <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 14px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${GHOST}" style="background:${GHOST};border:1px solid ${HAIRLINE}">
+        <tr>
+          <td style="padding:16px 18px">
+            <div style="font-family:${MONO};font-size:9px;letter-spacing:0.26em;text-transform:uppercase;color:${INK_FAINT}">SIGNAL ${esc(s.code)} ${s ? "" : ""}</div>
+            <a href="${o.siteUrl}/signals/${s.slug}" style="display:block;margin-top:6px;font-family:${SANS};font-size:17px;font-weight:800;letter-spacing:-0.02em;color:${INK};text-decoration:none;line-height:1.2">${esc(s.title)}</a>
+            <div style="margin-top:6px;font-family:${SANS};font-size:13.5px;line-height:1.5;color:${INK_SOFT}">${esc((s.summary || "").slice(0, 100))}</div>
+          </td>
+          <td width="40" valign="top" align="center" style="padding:16px 8px 0 0">
+            <span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border:1px solid ${INK_FAINT};font-family:${MONO};font-size:10px;color:${INK_FAINT}">→</span>
+          </td>
+        </tr>
+      </table>
     </td></tr>`,
       )
       .join("")}
     `
-    : "";
+      : "";
 
   const html = `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NIGHT}" style="background:${NIGHT};margin:0;padding:0">
-<tr><td align="center" style="padding:28px 12px">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%">
-${header(o.logoUrl)}
+<tr><td align="center" style="padding:24px 12px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;border:1px solid ${NIGHT_HAIRLINE}">
+<tr><td bgcolor="${NIGHT}" style="background:${NIGHT};padding:20px 28px 18px">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td><img src="${o.logoUrl}" alt="Spectre Rex" width="160" height="40" style="display:block;width:160px;height:auto;border:0" /></td>
+    <td align="right" style="font-family:${MONO};font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:${PAPER_FAINT}">EST 2026 · GGN</td>
+  </tr></table>
+</td></tr>
 ${hero}
-<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:34px 36px 0">
-  <div style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${INK_FAINT}">${label} ${esc(e.code)}${e.dateLabel ? ` · ${esc(e.dateLabel)}` : ""}</div>
-  <h1 style="margin:12px 0 0;font-family:${SANS};font-size:36px;line-height:1.02;font-weight:800;letter-spacing:-0.03em;color:${INK}">${esc(e.title)}</h1>
-  ${e.subtitle ? `<p style="margin:10px 0 0;font-family:${SANS};font-size:17px;font-weight:600;line-height:1.4;color:${INK_FAINT}">${esc(e.subtitle)}</p>` : ""}
+<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:36px 36px 8px">
+  <table cellpadding="0" cellspacing="0" border="0"><tr>
+    <td style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:${INK_FAINT};border:1px solid ${HAIRLINE};padding:6px 10px">${label}</td>
+    <td style="padding-left:10px;font-family:${MONO};font-size:10px;letter-spacing:0.2em;color:${INK_FAINT}">${esc(e.code)}${e.dateLabel ? ` · ${esc(e.dateLabel)}` : ""}</td>
+  </tr></table>
+  <h1 style="margin:18px 0 0;font-family:${SANS};font-size:38px;line-height:0.98;font-weight:800;letter-spacing:-0.04em;color:${INK}">${esc(e.title)}</h1>
+  ${e.subtitle ? `<p style="margin:12px 0 0;font-family:${SANS};font-size:18px;line-height:1.35;font-weight:600;color:${INK_FAINT}">${esc(e.subtitle)}</p>` : ""}
 </td></tr>
 <tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:18px 36px 0">
-  <p style="margin:0;font-family:${SANS};font-size:17px;line-height:1.62;color:${INK_SOFT}">${esc(e.summary ?? "")}</p>
+  <div style="width:32px;height:3px;background:${SPECTRE}"></div>
+  <p style="margin:18px 0 0;font-family:${SANS};font-size:17px;line-height:1.7;color:${INK_SOFT}">${esc(e.summary ?? "")}</p>
 </td></tr>
-<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:24px 36px 32px">
-  <table><tr><td bgcolor="${SPECTRE}"><a href="${e.url}" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${NIGHT};padding:14px 26px;text-decoration:none">${esc(o.ctaLabel)}</a></td></tr></table>
+<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:28px 36px 36px">
+  <table cellpadding="0" cellspacing="0" border="0"><tr>
+    <td bgcolor="${INK}" style="background:${INK};border:1px solid ${INK}">
+      <a href="${e.url}" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${PAPER};padding:15px 28px;text-decoration:none;border:1px solid ${SPECTRE}">${esc(o.ctaLabel)} →</a>
+    </td>
+    <td style="padding-left:12px;font-family:${MONO};font-size:9px;letter-spacing:0.15em;color:${INK_FAINT};line-height:1.4">Secure link<br />${esc(new URL(e.url).hostname)}</td>
+  </tr></table>
 </td></tr>
 ${latestProjects}
 ${latestSignals}
-<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:0 36px 32px">
-  <div style="border-top:1px solid ${HAIRLINE};padding-top:20px">
-    <p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${INK_FAINT}">You are receiving this because you subscribed to Spectre Rex transmissions. The dragon guards the list as well as the egg.</p>
+<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:8px 36px 36px">
+  <div style="border-top:1px solid ${HAIRLINE};padding-top:22px">
+    <p style="margin:0;font-family:${MONO};font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:${INK_FAINT}">Why you got this</p>
+    <p style="margin:8px 0 0;font-family:${SANS};font-size:13.5px;line-height:1.6;color:${INK_FAINT}">You subscribed to Spectre Rex transmissions. One egg, one dragon, no spam. Unsubscribe anytime — the dragon won't be offended, just slightly disappointed.</p>
   </div>
 </td></tr>
 ${footer(o.siteUrl, o.customFooter)}
@@ -269,21 +288,18 @@ ${footer(o.siteUrl, o.customFooter)}
   };
 }
 
-// ------------------------------------------------------------------
-// Additional templates
-// ------------------------------------------------------------------
-
 export function welcomeEmail(opts: EmailTemplateOptions = {}) {
   const o = { ...DEFAULTS, ...opts };
   const html = `
 <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NIGHT}" style="background:${NIGHT}"><tr><td align="center" style="padding:32px 12px">
-<table width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%">
-${header(o.logoUrl)}
-<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:36px">
+<table width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%;border:1px solid ${NIGHT_HAIRLINE}">
+<tr><td bgcolor="${NIGHT}" style="padding:20px 28px"><img src="${o.logoUrl}" alt="Spectre Rex" width="160" height="40" style="display:block" /></td></tr>
+<tr><td bgcolor="${SPECTRE}" style="height:3px">&nbsp;</td></tr>
+<tr><td bgcolor="${PAPER}" style="padding:36px">
   <div style="font-family:${MONO};font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#959491">Welcome to the grid</div>
-  <h1 style="margin:14px 0 0;font-family:${SANS};font-size:32px;font-weight:800;color:${INK}">You are on the list.</h1>
+  <h1 style="margin:14px 0 0;font-family:${SANS};font-size:36px;font-weight:800;letter-spacing:-0.03em;color:${INK}">You are on the list.</h1>
   <p style="margin:18px 0 0;font-family:${SANS};font-size:17px;line-height:1.62;color:${INK_SOFT}">Transmissions from inside the studio — devlogs, project reveals, and the occasional dragon update. No spam, one-click unsubscribe.</p>
-  <table style="margin-top:24px"><tr><td bgcolor="${SPECTRE}"><a href="${o.siteUrl}/signals" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${NIGHT};padding:14px 24px;text-decoration:none">Read signals</a></td></tr></table>
+  <table style="margin-top:28px"><tr><td bgcolor="${INK}" style="border:1px solid ${SPECTRE}"><a href="${o.siteUrl}/signals" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${PAPER};padding:14px 24px;text-decoration:none">Read signals →</a></td></tr></table>
 </td></tr>
 ${footer(o.siteUrl)}
 </table>
@@ -292,32 +308,6 @@ ${footer(o.siteUrl)}
   return {
     subject: "Welcome to Spectre Rex transmissions",
     html: wrapHtml("Welcome", "You are on the list", html),
-    text: `Welcome to Spectre Rex\n\nYou are on the list. Read signals at ${o.siteUrl}/signals\n\nUnsubscribe: {{{RESEND_UNSUBSCRIBE_URL}}}`,
-  };
-}
-
-export function newsletterEmail(
-  title: string,
-  bodyHtml: string,
-  opts: EmailTemplateOptions & { preheader?: string } = {},
-) {
-  const o = { ...DEFAULTS, ...opts };
-  const html = `
-<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${NIGHT}" style="background:${NIGHT}"><tr><td align="center" style="padding:28px 12px">
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%">
-${header(o.logoUrl)}
-<tr><td bgcolor="${PAPER}" style="background:${PAPER};padding:32px 36px">
-  <h1 style="margin:0;font-family:${SANS};font-size:32px;font-weight:800;color:${INK}">${esc(title)}</h1>
-  <div style="margin-top:18px;font-family:${SANS};font-size:16px;line-height:1.62;color:${INK_SOFT}">${bodyHtml}</div>
-  ${o.ctaUrl ? `<table style="margin-top:24px"><tr><td bgcolor="${SPECTRE}"><a href="${o.ctaUrl}" style="display:inline-block;font-family:${MONO};font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:${NIGHT};padding:14px 24px;text-decoration:none">${esc(o.ctaLabel)}</a></td></tr></table>` : ""}
-</td></tr>
-${footer(o.siteUrl, o.customFooter)}
-</table>
-</td></tr></table>`;
-
-  return {
-    subject: title,
-    html: wrapHtml(title, opts.preheader ?? "", html),
-    text: `${title}\n\n${bodyHtml.replace(/<[^>]*>/g, "")}\n\n${o.siteUrl}`,
+    text: `Welcome to Spectre Rex\n\nYou are on the list.\n\n${o.siteUrl}/signals`,
   };
 }
